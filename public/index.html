@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NetLab ห้องปฏิบัติการเครือข่ายคอมพิวเตอร์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E6ECF1; --panel:#FFFFFF; --ink:#1C2530; --muted:#5A6878; --line:#C6D0DA;
+  --orange:#E0701F; --green:#23915A; --blue:#2A66CF; --brown:#8A5A3B; --wo:#F3F3F0;
+  --ok:#1F8A4C; --bad:#C23B3B; --term-bg:#0F1A24; --term-ink:#CFE3D6; --term-dim:#7C93A6;
+  --field:#F4F7FA;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131A21; --panel:#1C252E; --ink:#E4EAF0; --muted:#98A7B6; --line:#33414F;
+    --orange:#F08A3E; --green:#3DB474; --blue:#5B8EEA; --brown:#B07B57; --wo:#E8E8E4;
+    --ok:#45C07A; --bad:#EE6B6B; --term-bg:#0A1118; --field:#141C24;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131A21; --panel:#1C252E; --ink:#E4EAF0; --muted:#98A7B6; --line:#33414F;
+  --orange:#F08A3E; --green:#3DB474; --blue:#5B8EEA; --brown:#B07B57; --wo:#E8E8E4;
+  --ok:#45C07A; --bad:#EE6B6B; --term-bg:#0A1118; --field:#141C24;
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Anuphan","Noto Sans Thai","Leelawadee UI",Tahoma,sans-serif;font-size:17px;line-height:1.65}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding:20px 18px 64px}
+
+/* hero: the 8 wires of a T568B plug */
+.wires{display:flex;gap:5px;height:88px;align-items:flex-end;margin:8px 0 18px}
+.wire{flex:1;border-radius:6px 6px 2px 2px;position:relative}
+.wire span{position:absolute;bottom:6px;left:0;right:0;text-align:center;font:600 12px "JetBrains Mono",monospace;color:#fff;mix-blend-mode:normal}
+.wire.w span{color:#333}
+@media (prefers-reduced-motion:no-preference){
+  .wire{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes rise{from{transform:scaleY(.1);transform-origin:bottom}to{transform:scaleY(1);transform-origin:bottom}}
+}
+h1{font-size:34px;line-height:1.2;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+.lede{color:var(--muted);margin:0 0 22px;max-width:60ch}
+
+.namebox{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:22px}
+.namebox label{font-weight:600}
+.namebox input{flex:1;min-width:180px;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+
+.progress{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px}
+.progress strong{font-size:22px}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin-bottom:26px}
+.bar i{display:block;height:100%;background:var(--green);transition:width .4s}
+
+.rooms{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.room{display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:left;width:100%;padding:0}
+.room .strip{width:14px;flex:none}
+.room .body{padding:14px 16px;flex:1}
+.room .num{font:600 13px "JetBrains Mono",monospace;color:var(--muted)}
+.room h2{font-size:19px;margin:2px 0 4px;line-height:1.35}
+.room p{margin:0;color:var(--muted);font-size:15px}
+.room .stat{padding:14px 16px;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;min-width:84px;font-size:14px;color:var(--muted)}
+.room .stat b{font-size:20px;color:var(--ink)}
+.room.done .stat b{color:var(--ok)}
+
+.foot{margin-top:28px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:10px 18px;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* room view */
+.back{background:none;border:0;padding:6px 0;color:var(--muted);font-weight:600;margin-bottom:6px}
+.roomhead{display:flex;gap:16px;margin-bottom:18px}.roomhead .rs{width:10px;flex:none;border-radius:3px}
+.roomhead h1{font-size:28px}
+.intro{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:20px}
+.intro p{margin:.3em 0}
+.task{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.task.solved{border-color:var(--ok)}
+.task .tq{display:flex;gap:12px}
+.task .tn{font:600 14px "JetBrains Mono",monospace;color:var(--muted);padding-top:2px;flex:none}
+.task .qtext{flex:1}
+.task .qtext p{margin:0 0 10px;font-weight:500}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row input{flex:1;min-width:160px;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:"JetBrains Mono","Anuphan",monospace;font-size:15px}
+.row input:disabled{opacity:.8}
+.msg{font-size:15px;margin-top:8px;min-height:1em}
+.msg.ok{color:var(--ok);font-weight:600}
+.msg.bad{color:var(--bad)}
+.hint{background:none;border:0;color:var(--blue);padding:4px 0;font-size:15px;margin-top:4px}
+.hinttext{font-size:15px;color:var(--muted);border-left:3px solid var(--blue);padding-left:10px;margin-top:6px}
+.explain{font-size:15px;background:var(--field);border-radius:8px;padding:8px 12px;margin-top:10px}
+pre.out{background:var(--term-bg);color:var(--term-ink);font:13.5px/1.5 "JetBrains Mono",monospace;border-radius:8px;padding:12px 14px;overflow-x:auto;margin:0 0 12px;white-space:pre}
+.choices{display:grid;gap:8px}
+.choice{display:block;text-align:left;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.choice.picked-bad{border-color:var(--bad);color:var(--bad)}
+.choice.picked-ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--panel));font-weight:600}
+
+/* ordering */
+.slots{display:grid;gap:6px;margin-bottom:10px}
+.slot{display:flex;align-items:center;gap:10px;border:1px dashed var(--line);border-radius:8px;padding:7px 10px;min-height:42px;background:var(--field);text-align:left;width:100%}
+.slot .pin{font:600 13px "JetBrains Mono",monospace;color:var(--muted);width:48px;flex:none}
+.slot.filled{border-style:solid}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:20px;padding:6px 12px;font-size:15px}
+.sw{width:26px;height:14px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.15)}
+
+/* terminal */
+.term{background:var(--term-bg);color:var(--term-ink);border-radius:12px;font:14px/1.55 "JetBrains Mono",monospace;margin-bottom:20px;overflow:hidden}
+.term .tbar{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:rgba(255,255,255,.06);color:var(--term-dim);font-size:13px}
+.term .screen{height:340px;overflow:auto;padding:12px 14px;white-space:pre;}
+.term .line{white-space:pre}
+.term .prompt{color:#8FD3A8}
+.term .inrow{display:flex;gap:8px;padding:0 14px 12px;align-items:center}
+.term .inrow input{flex:1;background:transparent;border:0;color:var(--term-ink);font:inherit;outline:none;min-width:0}
+.term .quick{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px}
+.term .quick button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--term-ink);border-radius:6px;padding:3px 9px;font:12.5px "JetBrains Mono",monospace}
+
+.tag{display:inline-block;font-size:12.5px;font-weight:600;color:var(--brown);border:1px solid var(--brown);border-radius:4px;padding:0 6px;margin:0 0 6px 8px;vertical-align:middle}
+.qtext>.tag{margin-left:0}
+.ref{font-size:14px;color:var(--muted)}
+.tag.vm{color:var(--blue);border-color:var(--blue)}
+.vmhead{font-size:22px;margin:30px 0 4px}
+.vmnote{color:var(--muted);margin:0 0 12px;font-size:15px}
+.vm{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
+.vmstatus{font-size:15px;color:var(--muted);margin-bottom:10px}
+.vmstatus.bad{color:var(--bad)}
+.vmscreen{background:#000;color:#ddd;border-radius:8px;overflow:auto;min-height:320px;padding:6px;cursor:text}
+.vmscreen canvas{max-width:100%}
+.startcard{background:var(--panel);border:2px dashed var(--line);border-radius:12px;padding:20px;text-align:center}
+.startcard .big{font-size:24px;font-weight:700;margin:0 0 6px}
+.startcard p{margin:0 0 14px;color:var(--muted)}
+.btn.start{font-size:19px;padding:12px 28px;background:var(--green);color:#fff}
+.timer{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:18px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.timer .clock{font:700 26px "JetBrains Mono",monospace;flex:1}
+.timer.warn{border-color:var(--orange)} .timer.warn .clock{color:var(--orange)}
+.timer.urgent{border-color:var(--bad)} .timer.urgent .clock{color:var(--bad)}
+.timer.done{justify-content:space-between;color:var(--muted)} .timer.done b{color:var(--ink)}
+.tstat{font-size:13px;margin-top:2px}
+.flag{background:var(--panel);border:2px solid var(--ok);border-radius:12px;padding:16px 18px;margin-top:20px}
+.flag code{font:600 16px "JetBrains Mono",monospace;color:var(--ok)}
+
+/* summary */
+.cert{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.cert h1{font-size:26px}
+.cert table{width:100%;border-collapse:collapse;margin:14px 0;font-size:15px}
+.cert td{padding:8px 0;border-bottom:1px solid var(--line)}
+.cert td:last-child{text-align:right;font-family:"JetBrains Mono",monospace}
+.code{font:600 20px "JetBrains Mono",monospace;letter-spacing:.08em}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ---------- data ---------- */
+const WIRE = {
+  wo:'repeating-linear-gradient(135deg,var(--wo) 0 6px,var(--orange) 6px 10px)',
+  o:'var(--orange)',
+  wg:'repeating-linear-gradient(135deg,var(--wo) 0 6px,var(--green) 6px 10px)',
+  bl:'var(--blue)',
+  wb:'repeating-linear-gradient(135deg,var(--wo) 0 6px,var(--blue) 6px 10px)',
+  g:'var(--green)',
+  wbr:'repeating-linear-gradient(135deg,var(--wo) 0 6px,var(--brown) 6px 10px)',
+  br:'var(--brown)'
+};
+const PIN=[WIRE.wo,WIRE.o,WIRE.wg,WIRE.bl,WIRE.wb,WIRE.g,WIRE.wbr,WIRE.br];
+const C=(q,options,correct,hint,explain,extra)=>Object.assign({type:'choice',q,options,correct,hint,explain},extra||{});
+const T=(q,answers,hint,explain,extra)=>Object.assign({type:'text',q,answers,hint,explain},extra||{});
+
+const ROOMS = [
+{
+  id:'r1', title:'พื้นฐานเครือข่ายและ Topology', ref:'เล่ม 1 บท 1 และเล่ม 2 บท 1, 3',
+  blurb:'ส่วนประกอบการสื่อสาร ประเภทเครือข่าย LAN/MAN/WAN และรูปแบบการเชื่อมต่อ',
+  intro:['การสื่อสารข้อมูลมีส่วนประกอบหลัก 5 อย่าง คือ ผู้ส่ง ผู้รับ ข้อความ สื่อกลาง และโปรโตคอล','เครือข่ายแบ่งตามขนาดพื้นที่เป็น LAN, MAN, WAN และแบ่งตามรูปแบบการต่อ (Topology) เป็น Bus, Star, Ring, Mesh'],
+  flag:'NET{hello_network}',
+  tasks:[
+    C('ข้อใดไม่ใช่ส่วนประกอบของระบบการสื่อสารข้อมูล',['ผู้ส่งและผู้รับ','ข้อความ','สื่อกลาง','โปรโตคอล','ไฟร์วอลล์'],4,'ส่วนประกอบหลักมี 5 อย่าง ลองนับดู','ไฟร์วอลล์เป็นอุปกรณ์ด้านความปลอดภัย ไม่ใช่ส่วนประกอบพื้นฐานของการสื่อสาร'),
+    C('เครือข่ายที่เชื่อมคอมพิวเตอร์ภายในอาคารของวิทยาลัยเรียกว่าอะไร',['LAN','MAN','WAN','PAN'],0,'Local = ท้องถิ่น พื้นที่จำกัด','LAN (Local Area Network) ครอบคลุมพื้นที่ใกล้ ๆ เช่น อาคาร หรือบริเวณวิทยาลัย'),
+    C('ธนาคารเชื่อมเครือข่ายสาขาทั่วประเทศ เป็นเครือข่ายประเภทใด',['LAN','MAN','WAN','PAN'],2,'Wide = กว้าง','WAN (Wide Area Network) ครอบคลุมพื้นที่กว้างระดับประเทศหรือโลก'),
+    C('ทุกเครื่องต่อสายเข้าหา Switch ตัวกลาง เป็น Topology แบบใด',['Bus','Star','Ring','Mesh'],1,'รูปร่างเหมือนดาวที่มีจุดศูนย์กลาง','Star เป็นแบบที่ใช้มากที่สุดในปัจจุบัน สายเส้นหนึ่งเสีย เครื่องอื่นยังใช้ได้'),
+    C('ทุกเครื่องต่อกับสายหลักเส้นเดียว ถ้าสายหลักขาด ทั้งระบบใช้ไม่ได้ คือ Topology แบบใด',['Bus','Star','Ring','Mesh'],0,'เหมือนรถเมล์ที่วิ่งเส้นทางเดียว','Bus ใช้สายน้อย แต่สายหลักเป็นจุดอ่อน'),
+    C('เครื่องต่อกันเป็นวง ส่งข้อมูลต่อกันไปทีละเครื่องทางเดียว คือ Topology แบบใด',['Bus','Star','Ring','Mesh'],2,'วงแหวน','Ring ข้อมูลวิ่งวนเป็นวงผ่านทุกเครื่อง'),
+    C('เครือข่ายที่ทุกเครื่องมีสถานะเท่ากัน แชร์ไฟล์ให้กันได้โดยไม่มีเซิร์ฟเวอร์กลาง เรียกว่าอะไร',['Client/Server','Peer-to-Peer','Mainframe','Cloud'],1,'Peer = เพื่อนที่เท่าเทียมกัน','Peer-to-Peer เหมาะกับเครือข่ายเล็ก ส่วน Client/Server มีเครื่องแม่ข่ายให้บริการ'),
+    T('Mesh Topology ที่มี 5 เครื่อง ต่อถึงกันทุกคู่ ต้องใช้สายกี่เส้น',['10'],'สูตร n(n−1)/2','5 × 4 ÷ 2 = 10 เส้น',{c:true}),
+    C('ข้อใดไม่ใช่เกณฑ์วัดประสิทธิภาพของเครือข่าย',['ประสิทธิภาพ (Performance)','ความน่าเชื่อถือ (Reliability)','ความปลอดภัย (Security)','สีของสายสัญญาณ'],3,'เกณฑ์มี 3 ด้าน','เกณฑ์วัดเครือข่ายคือ Performance, Reliability และ Security',{c:true})
+  ]
+},
+{
+  id:'r2', title:'อุปกรณ์และสื่อนำสัญญาณ', ref:'เล่ม 1 บท 2 และเล่ม 2 บท 3, 6',
+  blurb:'Hub, Switch, Router, สายสัญญาณ, สื่อไร้สาย และการมัลติเพล็กซ์',
+  intro:['อุปกรณ์เครือข่ายแต่ละชนิดทำงานต่างกัน สื่อกลางมีทั้งแบบใช้สาย (Guided) และไร้สาย (Wireless)','ภารกิจท้าทายในห้องนี้เป็นเรื่องการมัลติเพล็กซ์ คือการส่งข้อมูลหลายช่องผ่านสื่อเส้นเดียว'],
+  flag:'NET{gear_up}',
+  tasks:[
+    C('อุปกรณ์ใดเชื่อมเครือข่ายต่างวงเข้าด้วยกันและเลือกเส้นทางส่งข้อมูล',['Hub','Switch','Router','Repeater'],2,'ทำงานกับ IP Address','Router เลือกเส้นทาง (Routing) ระหว่างเครือข่าย'),
+    C('Hub ส่งต่อข้อมูลที่ได้รับอย่างไร',['ส่งเฉพาะพอร์ตปลายทาง','กระจายไปทุกพอร์ต','ส่งกลับผู้ส่ง','เก็บไว้ไม่ส่งต่อ'],1,'Hub ไม่รู้จัก MAC Address','Hub กระจายข้อมูลทุกพอร์ต ทำให้ชนกันง่ายและช้ากว่า Switch'),
+    C('อุปกรณ์ใดทำหน้าที่ขยายสัญญาณให้ส่งได้ไกลขึ้น',['Repeater','Router','Firewall','Modem'],0,'Repeat = ทำซ้ำ','Repeater รับสัญญาณที่อ่อนลงแล้วส่งต่อใหม่ให้แรงขึ้น'),
+    C('UTP ย่อมาจากอะไร',['Unshielded Twisted Pair','Universal Transfer Port','Unified Twisted Plug','Ultra Twisted Pair'],0,'สายตีเกลียวที่ไม่มีชีลด์','UTP คือสายคู่ตีเกลียวไม่มีฉนวนหุ้มชีลด์ ราคาถูก ใช้มากที่สุด'),
+    C('สื่อกลางใดส่งข้อมูลด้วยแสง เร็วมาก และไม่ถูกรบกวนจากคลื่นแม่เหล็กไฟฟ้า',['UTP','Coaxial','Fiber Optic','STP'],2,'ใยแก้ว','Fiber Optic ส่งด้วยแสงผ่านใยแก้ว ส่งได้ไกลและเร็ว'),
+    C('หัวต่อแบบใดใช้กับสาย Coaxial',['RJ-45','BNC','RJ-11','USB'],1,'หัวกลมมีตัวล็อกแบบบิด','BNC ใช้กับสาย Coaxial รุ่นเก่า'),
+    C('รีโมตทีวีใช้สื่อกลางไร้สายแบบใด',['อินฟราเรด','ไมโครเวฟ','ดาวเทียม','Wi-Fi'],0,'ต้องเล็งให้ตรง ผ่านกำแพงไม่ได้','อินฟราเรดส่งระยะใกล้และต้องไม่มีสิ่งกีดขวาง'),
+    C('สถานีวิทยุ FM หลายสถานีส่งพร้อมกันได้เพราะใช้ความถี่ต่างกัน เป็นการมัลติเพล็กซ์แบบใด',['FDM','TDM','WDM','CDM'],0,'F = Frequency','FDM แบ่งช่วงความถี่ให้แต่ละช่องสัญญาณ',{c:true}),
+    C('การแบ่งเวลาเป็นช่วงสั้น ๆ ผลัดกันส่งทีละช่อง เป็นการมัลติเพล็กซ์แบบใด',['FDM','TDM','WDM'],1,'T = Time','TDM ให้แต่ละช่องได้ช่วงเวลาของตัวเองวนกันไป',{c:true}),
+    C('ใยแก้วนำแสงส่งแสงหลายสี (หลายความยาวคลื่น) พร้อมกัน เป็นการมัลติเพล็กซ์แบบใด',['FDM','TDM','WDM'],2,'W = Wavelength','WDM ใช้กับ Fiber Optic',{c:true})
+  ]
+},
+{
+  id:'r3', title:'ข้อมูล สัญญาณ และการส่งข้อมูล', ref:'เล่ม 2 บท 4, 5', challengeRoom:true,
+  blurb:'แอนะล็อกกับดิจิทัล หน่วยความเร็ว ทิศทางการส่ง และโมเด็ม',
+  intro:['ห้องนี้มาจากเล่มที่สองทั้งหมด เป็นพื้นฐานชั้น Physical ว่าข้อมูลเดินทางเป็นสัญญาณอย่างไร','ทิศทางการส่งมี 3 แบบ: Simplex (ทางเดียว), Half-duplex (สลับกันส่ง), Full-duplex (ส่งพร้อมกันสองทาง)'],
+  flag:'NET{signal_found}',
+  tasks:[
+    C('สัญญาณที่มีค่าเปลี่ยนแปลงต่อเนื่องเรียบ ๆ เหมือนคลื่นเสียง คือสัญญาณแบบใด',['แอนะล็อก','ดิจิทัล'],0,'ดิจิทัลมีแค่ 0 กับ 1','สัญญาณแอนะล็อกต่อเนื่อง ส่วนดิจิทัลเป็นค่าไม่ต่อเนื่อง'),
+    T('ข้อมูล 1 ไบต์ (Byte) มีกี่บิต (bit)',['8'],'เลขยกกำลังของ 2','1 Byte = 8 bit'),
+    T('ไฟล์ขนาด 100 เมกะบิต ส่งผ่านเครือข่ายความเร็ว 10 Mbps ใช้เวลากี่วินาที',['10','10วินาที'],'เวลา = ขนาด ÷ ความเร็ว','100 ÷ 10 = 10 วินาที'),
+    T('สัญญาณเกิดซ้ำ 5 รอบใน 1 วินาที มีความถี่กี่เฮิรตซ์ (Hz)',['5','5hz'],'Hz = รอบต่อวินาที','ความถี่ 5 Hz'),
+    C('การออกอากาศโทรทัศน์ที่ส่งจากสถานีไปผู้ชมทางเดียว เป็นทิศทางการส่งแบบใด',['Simplex','Half-duplex','Full-duplex'],0,'ผู้ชมส่งกลับไม่ได้','Simplex ส่งได้ทางเดียว'),
+    C('วิทยุสื่อสาร (วอ) ต้องกดพูดทีละฝ่าย เป็นทิศทางการส่งแบบใด',['Simplex','Half-duplex','Full-duplex'],1,'ส่งได้สองทาง แต่ไม่พร้อมกัน','Half-duplex ผลัดกันส่ง'),
+    C('คุยโทรศัพท์ที่พูดและฟังได้พร้อมกัน เป็นทิศทางการส่งแบบใด',['Simplex','Half-duplex','Full-duplex'],2,'สองทางพร้อมกัน','Full-duplex ส่งและรับได้พร้อมกัน'),
+    C('การส่งข้อมูลทีละบิตเรียงกันไปบนสายเส้นเดียว เช่น USB เรียกว่าอะไร',['การส่งแบบขนาน (Parallel)','การส่งแบบอนุกรม (Serial)'],1,'Serial = เรียงเป็นแถว','การส่งแบบอนุกรมใช้สายน้อยและส่งได้ไกลกว่าแบบขนาน'),
+    C('Modem ทำหน้าที่อะไร',['แปลงสัญญาณดิจิทัล ↔ แอนะล็อก','กรองไวรัส','เลือกเส้นทาง IP','ขยายสัญญาณ Wi-Fi'],0,'MOdulator + DEModulator','โมเด็มแปลงสัญญาณเพื่อส่งผ่านสายโทรศัพท์หรือสายเคเบิล'),
+    C('คำว่า Asymmetric ใน ADSL หมายถึงอะไร',['ความเร็วดาวน์โหลดกับอัปโหลดไม่เท่ากัน','ใช้สายไฟเบอร์','ใช้ได้เฉพาะกลางคืน','ไม่ต้องใช้โมเด็ม'],0,'Asymmetric = ไม่สมมาตร','ADSL ดาวน์โหลดเร็วกว่าอัปโหลด เพราะผู้ใช้ทั่วไปรับข้อมูลมากกว่าส่ง'),
+    C('สัญญาณอ่อนลงเมื่อส่งไปไกล ๆ เรียกว่าอะไร',['Attenuation','Noise','Distortion','Multiplexing'],0,'เป็นความสูญเสียชนิดหนึ่ง','Attenuation คือการลดทอนของสัญญาณตามระยะทาง แก้ด้วย Repeater')
+  ]
+},
+{
+  id:'r4', title:'OSI, TCP/IP และโปรโตคอล', ref:'เล่ม 1 บท 3 และเล่ม 2 บท 2, 11',
+  blurb:'7 ชั้นของ OSI อุปกรณ์แต่ละชั้น TCP/UDP และหมายเลขพอร์ต',
+  intro:['OSI Model แบ่งการสื่อสารเป็น 7 ชั้น แต่ละชั้นมีหน้าที่ของตัวเอง ทำให้ออกแบบและแก้ปัญหาได้ง่ายขึ้น','ภารกิจท้าทายเป็นเรื่องชั้น Transport: หมายเลขพอร์ตและการจับมือ 3 ครั้งของ TCP'],
+  flag:'NET{7_layers_unlocked}',
+  tasks:[
+    {type:'order', q:'เรียงชั้นของ OSI Model จากชั้นที่ 7 (บนสุด) ลงไปชั้นที่ 1', labels:['ชั้น 7','ชั้น 6','ชั้น 5','ชั้น 4','ชั้น 3','ชั้น 2','ชั้น 1'],
+      items:[{t:'Application'},{t:'Presentation'},{t:'Session'},{t:'Transport'},{t:'Network'},{t:'Data Link'},{t:'Physical'}],
+      hint:'ท่องจำ: All People Seem To Need Data Processing', explain:'บนลงล่าง: Application, Presentation, Session, Transport, Network, Data Link, Physical'},
+    T('โปรโตคอล HTTP ทำงานอยู่ชั้นที่เท่าไรของ OSI',['7','application','ชั้น7'],'เป็นชั้นที่ใกล้ผู้ใช้ที่สุด','HTTP อยู่ชั้น 7 Application Layer'),
+    T('Switch ส่งต่อข้อมูลโดยดูจาก MAC Address ทำงานชั้นที่เท่าไร',['2','datalink','ชั้น2'],'ชั้นที่ใช้ MAC Address คือ Data Link','Switch ทำงานชั้น 2 Data Link'),
+    T('Router เลือกเส้นทางโดยดูจาก IP Address ทำงานชั้นที่เท่าไร',['3','network','ชั้น3'],'IP อยู่ชั้นเดียวกับ Router','Router ทำงานชั้น 3 Network'),
+    C('หน่วยข้อมูล (PDU) ของชั้น Network เรียกว่าอะไร',['Frame','Packet','Segment','Bit'],1,'ชั้น 2 = Frame, ชั้น 4 = Segment','Network Layer ใช้หน่วยข้อมูลเรียกว่า Packet'),
+    C('ดูวิดีโอสตรีมสดที่ยอมให้ข้อมูลหายบ้างแต่ต้องเร็ว ควรใช้โปรโตคอลใด',['TCP','UDP'],1,'โปรโตคอลหนึ่งไม่ต้องรอยืนยันการรับ','UDP ไม่มีการยืนยันและส่งซ้ำ จึงเร็วกว่า เหมาะกับงานเรียลไทม์'),
+    T('เว็บไซต์ HTTP ใช้พอร์ตหมายเลขใดเป็นค่าเริ่มต้น',['80'],'เลขสองหลัก','HTTP ใช้พอร์ต 80',{c:true}),
+    T('เว็บไซต์ที่เข้ารหัส HTTPS ใช้พอร์ตหมายเลขใด',['443'],'เลขสามหลัก ขึ้นต้นด้วย 4','HTTPS ใช้พอร์ต 443',{c:true}),
+    T('บริการ DNS ใช้พอร์ตหมายเลขใด',['53'],'อยู่ระหว่าง 50 ถึง 60','DNS ใช้พอร์ต 53',{c:true}),
+    C('ในชั้น Transport ใช้อะไรระบุว่าข้อมูลต้องส่งถึงโปรแกรมใดในเครื่องปลายทาง',['MAC Address','IP Address','Port Number','SSID'],2,'IP ระบุเครื่อง แล้วอะไรระบุโปรแกรม','Port Number ระบุโปรเซส ทำให้ส่งจากโปรเซสถึงโปรเซสได้ (Process-to-Process)',{c:true}),
+    {type:'order', c:true, q:'เรียงลำดับการจับมือ 3 ครั้ง (3-Way Handshake) ของ TCP', labels:['ครั้งที่ 1','ครั้งที่ 2','ครั้งที่ 3'],
+      items:[{t:'SYN (ผู้ขอเริ่ม)'},{t:'SYN-ACK (ผู้รับตอบ)'},{t:'ACK (ยืนยัน)'}],
+      hint:'SYN = ขอเริ่ม, ACK = รับทราบ', explain:'SYN → SYN-ACK → ACK แล้วจึงเริ่มส่งข้อมูลจริง'}
+  ]
+},
+{
+  id:'r5', title:'IP Address, Subnet, NAT และ IPv6', ref:'เล่ม 1 บท 3 และเล่ม 2 บท 10',
+  blurb:'คลาส IP, Network/Broadcast, Subnet Mask, เลขฐานสอง, CIDR และ IPv6',
+  intro:['IPv4 มี 32 บิต แบ่งเป็น 4 ส่วน ส่วนละ 8 บิต ตัวเลข /24 หรือ /26 คือจำนวนบิตที่เป็นส่วน Network','จำนวน Host ที่ใช้ได้ = 2^(32 − prefix) − 2 (ลบ Network Address และ Broadcast ออก)'],
+  flag:'NET{subnet_ninja}',
+  tasks:[
+    C('IP 10.0.0.1 อยู่ในคลาสใด',['Class A','Class B','Class C','Class D'],0,'Class A: 1–126, B: 128–191, C: 192–223','ไบต์แรก 10 อยู่ในช่วง Class A'),
+    C('IP 172.16.8.20 อยู่ในคลาสใด',['Class A','Class B','Class C'],1,'ดูไบต์แรก 172','172 อยู่ในช่วง 128–191 จึงเป็น Class B'),
+    T('IP 192.168.10.37/24 มี Network Address คืออะไร',['192.168.10.0'],'/24 ให้ 3 ส่วนแรกเป็น Network ส่วนสุดท้ายเป็น 0','Network Address = 192.168.10.0'),
+    T('IP 192.168.10.37/24 มี Broadcast Address คืออะไร',['192.168.10.255'],'ส่วน Host เป็นบิต 1 ทั้งหมด','Broadcast = 192.168.10.255'),
+    T('เครือข่าย /24 มี Host ที่ใช้งานได้กี่เครื่อง',['254'],'2^8 − 2','2^8 − 2 = 254 เครื่อง'),
+    T('Subnet Mask ของ /26 เขียนแบบเลขฐานสิบคืออะไร',['255.255.255.192'],'ส่วนที่ 4 มีบิต 1 อยู่ 2 บิตแรก = 128 + 64','/26 = 255.255.255.192'),
+    T('IP 172.16.5.100/26 อยู่ใน Network Address ใด',['172.16.5.64'],'/26 แบ่งช่วงละ 64: 0, 64, 128, 192','100 อยู่ในช่วง 64–127 ดังนั้น Network = 172.16.5.64'),
+    C('IP ใดต่อไปนี้เป็น Private IP',['8.8.8.8','192.168.1.1','1.1.1.1','203.0.113.5'],1,'ช่วง Private: 10.x, 172.16–31.x, 192.168.x','192.168.1.1 เป็น Private ใช้ในเครือข่ายภายใน'),
+    T('IP Loopback ที่ใช้ทดสอบเครื่องตัวเองคือหมายเลขใด',['127.0.0.1'],'ขึ้นต้นด้วย 127','127.0.0.1 หรือ localhost'),
+    T('เลข 192 เขียนเป็นเลขฐานสอง 8 บิตได้อย่างไร',['11000000'],'ค่าประจำหลัก 128 64 32 16 8 4 2 1','192 = 128 + 64 = 11000000',{c:true}),
+    T('Subnet Mask 255.255.240.0 เขียนแบบ CIDR ได้เป็น / เท่าไร (ตอบตัวเลข)',['20','/20'],'240 = 11110000 มีบิต 1 อยู่ 4 บิต','8 + 8 + 4 = 20 จึงเป็น /20',{c:true}),
+    T('เครือข่าย /27 มี Host ที่ใช้งานได้กี่เครื่อง',['30'],'เหลือบิต Host 5 บิต','2^5 − 2 = 30 เครื่อง',{c:true}),
+    C('NAT (Network Address Translation) ทำหน้าที่อะไร',['แปลง Private IP เป็น Public IP เพื่อออกอินเทอร์เน็ต','แปลงชื่อโดเมนเป็น IP','แจก IP อัตโนมัติ','เข้ารหัสข้อมูล'],0,'ทำให้หลายเครื่องใช้ Public IP เดียวกันได้','NAT อยู่ใน Router บ้านและองค์กร ช่วยประหยัด IPv4',{c:true}),
+    T('IPv6 มีความยาวกี่บิต',['128'],'มากกว่า IPv4 สี่เท่า','IPv6 ยาว 128 บิต',{c:true}),
+    T('ย่อ IPv6 นี้ให้สั้นที่สุด: 2001:0db8:0000:0000:0000:0000:0000:0001',['2001:db8::1'],'ตัด 0 นำหน้าในแต่ละกลุ่ม และใช้ :: แทนกลุ่ม 0 ที่ติดกันได้ 1 ครั้ง','2001:0db8 → 2001:db8 และกลุ่ม 0000 หกกลุ่ม → ::',{c:true,exact:true})
+  ]
+},
+{
+  id:'r6', title:'LAN ใช้สาย, Ethernet และการเข้าหัว UTP', ref:'เล่ม 1 บท 4 และเล่ม 2 บท 8',
+  blurb:'เรียงสี T568B สายตรง/สายไขว้ มาตรฐาน IEEE 802.3 และ MAC Address',
+  intro:['สาย UTP มี 8 เส้น 4 คู่ การเข้าหัว RJ-45 ต้องเรียงสีให้ถูกตามมาตรฐาน','หันหัว RJ-45 ให้ขาทองแดงอยู่ด้านบน ตัวล็อกอยู่ด้านล่าง ขาซ้ายสุดคือขาที่ 1'],
+  flag:'NET{crimp_like_a_pro}',
+  tasks:[
+    {type:'order', q:'เรียงสีสายตามมาตรฐาน T568B จากขาที่ 1 ถึงขาที่ 8', labels:['ขา 1','ขา 2','ขา 3','ขา 4','ขา 5','ขา 6','ขา 7','ขา 8'],
+      items:[{t:'ขาวส้ม',sw:WIRE.wo},{t:'ส้ม',sw:WIRE.o},{t:'ขาวเขียว',sw:WIRE.wg},{t:'น้ำเงิน',sw:WIRE.bl},{t:'ขาวน้ำเงิน',sw:WIRE.wb},{t:'เขียว',sw:WIRE.g},{t:'ขาวน้ำตาล',sw:WIRE.wbr},{t:'น้ำตาล',sw:WIRE.br}],
+      hint:'T568B เริ่มด้วยคู่สีส้ม คู่สีน้ำเงินอยู่ตรงกลาง (ขา 4 และ 5)', explain:'ขาวส้ม ส้ม ขาวเขียว น้ำเงิน ขาวน้ำเงิน เขียว ขาวน้ำตาล น้ำตาล'},
+    C('เข้าหัวทั้งสองปลายเป็น T568B เหมือนกัน เรียกว่าสายแบบใด',['สายตรง (Straight-through)','สายไขว้ (Crossover)','สาย Rollover'],0,'สองปลายเหมือนกันทุกขา','สายตรงใช้ต่อคอมพิวเตอร์เข้ากับ Switch'),
+    C('ปลายหนึ่งเป็น T568A อีกปลายเป็น T568B เรียกว่าสายแบบใด',['สายตรง (Straight-through)','สายไขว้ (Crossover)','สายโทรศัพท์'],1,'คู่ส่งกับคู่รับถูกสลับกัน','สายไขว้ใช้ต่ออุปกรณ์ชนิดเดียวกันโดยตรง เช่น PC กับ PC'),
+    T('หัวต่อที่ใช้กับสาย UTP สำหรับเครือข่าย LAN ชื่อว่าอะไร',['rj45','rj-45'],'RJ ตามด้วยเลขสองหลัก (สายโทรศัพท์ใช้ RJ-11)','หัวต่อสาย LAN คือ RJ-45'),
+    T('สาย UTP ต่อเส้นเดียวได้ยาวสุดกี่เมตรตามมาตรฐาน',['100','100m','100เมตร'],'เลขกลม ๆ หลักร้อย','สาย UTP ต่อได้ไม่เกิน 100 เมตร'),
+    C('มาตรฐาน IEEE 802.3 คือเครือข่ายแบบใด',['Ethernet','Wi-Fi','Bluetooth','Token Ring'],0,'เครือข่ายแลนแบบใช้สายที่นิยมที่สุด','IEEE 802.3 คือ Ethernet'),
+    C('1000BASE-T มีความเร็วเท่าไร',['10 Mbps','100 Mbps','1 Gbps','10 Gbps'],2,'1000 Mbps เท่ากับเท่าไร','1000BASE-T = 1000 Mbps = 1 Gbps ใช้สาย UTP (T = Twisted pair)'),
+    T('MAC Address มีความยาวกี่บิต',['48'],'เขียนเป็นเลขฐาน 16 จำนวน 12 หลัก','MAC Address ยาว 48 บิต เช่น 00-1A-2B-3C-4D-5E',{c:true}),
+    C('Ethernet แบบดั้งเดิมใช้วิธีใดควบคุมการเข้าถึงสื่อกลาง',['CSMA/CD','CSMA/CA','Token Passing','Polling'],0,'CD = Collision Detection','CSMA/CD ฟังสายก่อนส่ง และตรวจจับการชนระหว่างส่ง',{c:true}),
+    C('ครึ่งแรก 24 บิตของ MAC Address (OUI) บอกอะไร',['ผู้ผลิตการ์ดแลน','หมายเลขห้อง','IP ของเครื่อง','ความเร็วการ์ด'],0,'Organizationally Unique Identifier','OUI ระบุบริษัทผู้ผลิต ส่วน 24 บิตหลังเป็นหมายเลขของการ์ดนั้น',{c:true}),
+    C('โทเค็นริง (Token Ring) เป็นมาตรฐาน IEEE หมายเลขใด',['802.3','802.4','802.5','802.11'],2,'802.4 คือ Token Bus','Token Ring คือ IEEE 802.5',{c:true})
+  ]
+},
+{
+  id:'r7', title:'การตรวจจับและควบคุมข้อผิดพลาด', ref:'เล่ม 2 บท 7', challengeRoom:true,
+  blurb:'Parity Bit, CRC, การควบคุมการไหล และการส่งซ้ำ',
+  intro:['ระหว่างส่งข้อมูล บิตอาจผิดเพี้ยนจากสัญญาณรบกวน จึงต้องมีวิธีตรวจจับและแก้ไข','Parity คู่ (Even): เติมบิตให้จำนวนเลข 1 ทั้งหมดเป็นเลขคู่ Parity คี่ (Odd): เติมให้เป็นเลขคี่'],
+  flag:'NET{no_bit_left_behind}',
+  tasks:[
+    C('ข้อมูลที่มีบิตผิดหลายบิตติดกันเป็นช่วง เรียกว่าข้อผิดพลาดแบบใด',['Single-bit Error','Burst Error'],1,'Burst = ระเบิดออกมาเป็นช่วง','Burst Error คือบิตผิดตั้งแต่ 2 บิตขึ้นไปในช่วงเดียวกัน'),
+    T('ข้อมูล 1011001 ใช้ Parity คู่ (Even) ต้องเติม Parity Bit เป็นเท่าไร',['0'],'นับเลข 1 ในข้อมูลก่อน','มีเลข 1 อยู่ 4 ตัว เป็นเลขคู่แล้ว จึงเติม 0'),
+    T('ข้อมูล 1101011 ใช้ Parity คู่ (Even) ต้องเติม Parity Bit เป็นเท่าไร',['1'],'นับเลข 1 ให้ครบ','มีเลข 1 อยู่ 5 ตัว ต้องเติม 1 ให้เป็น 6 (คู่)'),
+    T('ข้อมูล 1010000 ใช้ Parity คี่ (Odd) ต้องเติม Parity Bit เป็นเท่าไร',['1'],'Odd ต้องการให้จำนวน 1 เป็นเลขคี่','มีเลข 1 อยู่ 2 ตัว ต้องเติม 1 ให้เป็น 3 (คี่)'),
+    C('การตรวจสอบแบบ Parity ตรวจไม่พบข้อผิดพลาดในกรณีใด',['บิตผิด 1 บิต','บิตผิด 2 บิต','บิตผิด 3 บิต'],1,'ลองนึกว่าถ้า 1 กลายเป็น 0 สองตัว จำนวน 1 ยังคู่อยู่ไหม','บิตผิดเป็นจำนวนคู่ทำให้ผล Parity เหมือนเดิม จึงตรวจไม่พบ'),
+    C('วิธีตรวจจับข้อผิดพลาดที่ใช้ในเฟรม Ethernet คือวิธีใด',['Parity','CRC','Checksum','ไม่มีการตรวจ'],1,'Cyclic Redundancy Check','Ethernet ใช้ CRC ในช่อง FCS ท้ายเฟรม ตรวจจับได้แม่นยำมาก'),
+    C('Flow Control (การควบคุมการไหลของข้อมูล) มีไว้เพื่ออะไร',['ป้องกันผู้ส่งส่งเร็วเกินกว่าที่ผู้รับรับไหว','เข้ารหัสข้อมูล','เลือกเส้นทาง','บีบอัดข้อมูล'],0,'นึกถึงการเทน้ำใส่ขวดปากเล็ก','Flow Control คุมจังหวะการส่งให้พอดีกับผู้รับ'),
+    C('วิธี Stop-and-Wait ทำงานอย่างไร',['ส่งทีละเฟรมแล้วรอ ACK ก่อนส่งเฟรมถัดไป','ส่งทุกเฟรมพร้อมกัน','ส่งซ้ำทุกเฟรม 2 ครั้ง','ไม่ต้องรอการตอบรับ'],0,'Stop แล้ว Wait','ส่ง 1 เฟรม หยุดรอ ACK แล้วจึงส่งต่อ ง่ายแต่ช้า'),
+    C('ในการส่งซ้ำอัตโนมัติ (ARQ) ผู้ส่งจะส่งเฟรมเดิมซ้ำเมื่อใด',['ได้รับ NAK หรือหมดเวลารอ (Timeout)','ได้รับ ACK','ผู้รับปิดเครื่อง','ทุก ๆ 1 นาที'],0,'NAK = ไม่รับ','ถ้าได้ NAK หรือ ACK ไม่มาภายในเวลา ผู้ส่งจะส่งเฟรมนั้นใหม่')
+  ]
+},
+{
+  id:'r8', title:'เครือข่าย LAN ไร้สาย', ref:'เล่ม 1 บท 5 และเล่ม 2 บท 9',
+  blurb:'มาตรฐาน 802.11, SSID, Access Point และความปลอดภัย Wi-Fi',
+  intro:['Wi-Fi ใช้มาตรฐาน IEEE 802.11 เชื่อมต่อได้ทั้งแบบ Infrastructure (ผ่าน Access Point) และ Ad-hoc (เครื่องต่อกันเอง)','ความปลอดภัยของ Wi-Fi ขึ้นกับวิธีเข้ารหัส ยิ่งใหม่ยิ่งปลอดภัย'],
+  flag:'NET{wireless_wizard}',
+  tasks:[
+    C('มาตรฐาน IEEE ของเครือข่าย Wi-Fi คือหมายเลขใด',['802.3','802.5','802.11','802.15'],2,'802.3 คือ Ethernet แบบใช้สาย','Wi-Fi คือ IEEE 802.11 (802.15 คือ Bluetooth/PAN)'),
+    C('Wi-Fi ทั่วไปใช้คลื่นความถี่ย่านใด',['2.4 GHz และ 5 GHz','900 MHz','100 MHz','60 Hz'],0,'Router บ้านมักมีสองย่าน','Wi-Fi ใช้ 2.4 GHz (ไปไกล) และ 5 GHz (เร็วกว่า) รุ่นใหม่มี 6 GHz ด้วย'),
+    C('ชื่อเครือข่าย Wi-Fi ที่แสดงให้เลือกเชื่อมต่อ เรียกว่าอะไร',['SSID','MAC','DNS','URL'],0,'Service Set Identifier','SSID คือชื่อของเครือข่ายไร้สาย'),
+    C('อุปกรณ์ที่กระจายสัญญาณ Wi-Fi และเชื่อมเครื่องไร้สายเข้ากับ LAN แบบใช้สาย คืออะไร',['Access Point','Hub','Repeater สาย','Modem 56K'],0,'จุดเข้าถึง','Access Point เป็นศูนย์กลางของเครือข่ายไร้สายแบบ Infrastructure'),
+    C('โน้ตบุ๊กสองเครื่องเชื่อมต่อ Wi-Fi หากันโดยตรงไม่ผ่าน Access Point เรียกว่าโหมดใด',['Infrastructure','Ad-hoc','Mesh','Bridge'],1,'ตั้งขึ้นเฉพาะกิจ','Ad-hoc เชื่อมต่อแบบ Peer-to-Peer ไม่ต้องมี AP'),
+    C('การเข้ารหัส Wi-Fi แบบใดปลอดภัยที่สุด',['Open (ไม่มีรหัส)','WEP','WPA','WPA3'],3,'ตัวเลขยิ่งมากยิ่งใหม่','WPA3 ใหม่และปลอดภัยที่สุด ส่วน WEP ถูกเจาะได้ง่ายมาก ไม่ควรใช้'),
+    C('ข้อใดไม่ใช่วิธีเพิ่มความปลอดภัยให้ Wi-Fi',['เปลี่ยนรหัสผ่านเริ่มต้นของ Router','ใช้ WPA2/WPA3','อัปเดตเฟิร์มแวร์','ตั้งรหัส Wi-Fi เป็น 12345678'],3,'รหัสแบบไหนเดาง่าย','รหัส 12345678 เดาได้ภายในไม่กี่วินาที'),
+    C('Wi-Fi ใช้ CSMA/CA แทน CSMA/CD เพราะเหตุใด',['อุปกรณ์ไร้สายตรวจจับการชนขณะส่งได้ยาก จึงหลีกเลี่ยงการชนก่อน','ประหยัดไฟกว่าเท่านั้น','ถูกกว่า','เพราะไม่มีการชนเกิดขึ้นเลย'],0,'CA = Collision Avoidance','อุปกรณ์ไร้สายส่งและฟังพร้อมกันได้ยาก จึงใช้วิธีหลีกเลี่ยงการชนแทน',{c:true}),
+    C('Wi-Fi 6 ตรงกับมาตรฐานใด',['802.11n','802.11ac','802.11ax','802.11b'],2,'Wi-Fi 4 = n, Wi-Fi 5 = ac','Wi-Fi 6 คือ 802.11ax',{c:true})
+  ]
+},
+{
+  id:'r9', title:'เครือข่ายใน Windows และระบบปฏิบัติการเครือข่าย', ref:'เล่ม 1 บท 6, 7', terminal:true,
+  quick:['help','hostname','ipconfig','net share','net view','cls'],
+  blurb:'ชื่อเครื่อง Workgroup การแชร์โฟลเดอร์ ตั้งค่า IP และ NOS',
+  intro:['คุณใช้เครื่อง LAB-PC07 ใช้เทอร์มินัลด้านล่างตรวจสอบการตั้งค่าและการแชร์ในเครือข่าย Windows','พิมพ์ help เพื่อดูคำสั่ง หรือแตะปุ่มคำสั่งลัด'],
+  flag:'NET{shared_and_ready}',
+  tasks:[
+    T('ชื่อเครื่อง (Computer Name) ของเครื่องนี้คืออะไร',['lab-pc07'],'คำสั่ง hostname','ชื่อเครื่องต้องไม่ซ้ำกันในเครือข่าย'),
+    T('เครื่องนี้อยู่ใน Workgroup ชื่ออะไร',['netlab'],'ลองคำสั่ง net view','Workgroup คือกลุ่มเครื่องที่เห็นกันในเครือข่าย'),
+    T('จาก net share โฟลเดอร์ที่แชร์ไว้ให้นักเรียนส่งงานชื่ออะไร',['homework'],'ดูชื่อที่ไม่ได้ลงท้ายด้วย $','แชร์ที่ลงท้ายด้วย $ เป็นแชร์ซ่อนของระบบ'),
+    T('เครื่องอื่นจะเปิดโฟลเดอร์แชร์นี้ได้ต้องพิมพ์ path ว่าอะไร',['\\\\lab-pc07\\homework','\\\\192.168.20.57\\homework'],'รูปแบบ \\\\ชื่อเครื่อง\\ชื่อแชร์','ใช้รูปแบบ UNC Path: \\\\LAB-PC07\\Homework'),
+    C('หลังเปลี่ยนชื่อเครื่องใน Windows ต้องทำอะไรเพื่อให้มีผล',['รีสตาร์ทเครื่อง','ถอดสาย LAN','ติดตั้ง Windows ใหม่','ไม่ต้องทำอะไร'],0,'การเปลี่ยนแปลงระดับระบบ','Windows ต้องรีสตาร์ทชื่อใหม่จึงมีผล'),
+    C('ตั้งค่า IP แบบ Static ในหน้า IPv4 Properties ข้อใดไม่ต้องกรอก',['IP Address','Subnet Mask','Default Gateway','MAC Address'],3,'ค่าหนึ่งมาจากการ์ดแลนเอง','MAC Address ติดมากับการ์ดแลน ส่วน DNS ควรกรอกด้วย'),
+    C('เครือข่ายที่แต่ละเครื่องจัดการผู้ใช้เอง ไม่มีเซิร์ฟเวอร์กลางควบคุม คือแบบใด',['Workgroup','Domain'],0,'Domain ต้องมีเซิร์ฟเวอร์','Workgroup เหมาะกับเครือข่ายเล็ก Domain ใช้ Windows Server + Active Directory'),
+    C('ข้อใดเป็นระบบปฏิบัติการเครือข่าย (NOS)',['Windows Server','Microsoft Word','Google Chrome','Photoshop'],0,'ทำหน้าที่ให้บริการเครือข่าย','Windows Server, Linux Server เป็น NOS'),
+    C('ซอฟต์แวร์ใดใช้จำลองเครื่องคอมพิวเตอร์เสมือน (Virtual Machine)',['VirtualBox','Excel','Zoom','Notepad'],0,'เล่ม 1 บท 7 ใช้ติดตั้ง NOS บนเครื่องจำลอง','VirtualBox และ VMware ใช้สร้างเครื่องเสมือน')
+  ]
+},
+{
+  id:'r10', title:'ออกแบบ ตรวจสอบ และแก้ปัญหาเครือข่าย', ref:'เล่ม 1 บท 8', terminal:true,
+  quick:['help','ipconfig','ipconfig /all','ping 192.168.20.1','arp -a','cls'],
+  blurb:'ใช้ ipconfig, ping, tracert, nslookup, arp และวิเคราะห์ปัญหาจริง',
+  intro:['คุณนั่งอยู่ที่เครื่อง LAB-PC07 ใช้เทอร์มินัลด้านล่างหาคำตอบข้อ 1–8','ข้อ 9 เป็นต้นไปคือสถานการณ์แก้ปัญหา อ่านผลคำสั่งแล้วเลือกสาเหตุที่น่าจะเป็นที่สุด'],
+  flag:'NET{network_doctor}',
+  tasks:[
+    T('เครื่องนี้มี IPv4 Address คืออะไร',['192.168.20.57'],'คำสั่ง ipconfig','ดูบรรทัด IPv4 Address'),
+    T('Default Gateway ของเครื่องนี้คืออะไร',['192.168.20.1'],'อยู่ในผลของ ipconfig','Default Gateway คือประตูออกนอกวงเครือข่าย'),
+    T('DNS Server ที่เครื่องนี้ใช้คือ IP ใด',['192.168.20.10'],'ลอง ipconfig /all','ipconfig /all แสดง DNS, MAC, DHCP'),
+    T('MAC Address (Physical Address) ของเครื่องนี้คืออะไร',['00-1a-2b-3c-4d-5e'],'ดู Physical Address ใน ipconfig /all','MAC Address เป็นเลขประจำการ์ดแลน'),
+    T('เครื่องพิมพ์มี IP 192.168.20.99 ลอง ping แล้วได้ข้อความว่าอะไร',['requesttimedout','requesttimedout.','timedout','rto'],'ping 192.168.20.99','Request timed out แปลว่าไม่มีการตอบกลับ อาจปิดเครื่องหรือสายหลุด'),
+    T('tracert 8.8.8.8 ข้อมูลผ่านทั้งหมดกี่ hop จนถึงปลายทาง',['5'],'นับบรรทัดที่มีหมายเลขลำดับ','tracert แสดงเราเตอร์แต่ละตัวที่ข้อมูลผ่าน'),
+    T('nslookup www.netlab.test ได้ IP อะไร',['203.0.113.80'],'nslookup www.netlab.test','DNS แปลงชื่อโดเมนเป็น IP Address'),
+    T('จากตาราง ARP MAC Address ของ Default Gateway คืออะไร',['00-50-56-c0-00-01'],'arp -a แล้วหาบรรทัด 192.168.20.1','ARP จับคู่ IP กับ MAC ในวงเดียวกัน'),
+    C('นักเรียนเข้าอินเทอร์เน็ตไม่ได้ ผล ipconfig เป็นดังนี้ สาเหตุคืออะไร',['DNS Server ล่ม','ไม่ได้รับ IP จาก DHCP Server','Subnet Mask ผิด','การ์ดจอเสีย'],1,'IP ที่ขึ้นต้นด้วย 169.254 มีชื่อเรียกพิเศษ','169.254.x.x คือ APIPA ตั้งเองเมื่อติดต่อ DHCP ไม่ได้ ควรตรวจสายและ DHCP Server',{pre:'IPv4 Address. . . . . : 169.254.12.5\nSubnet Mask . . . . . : 255.255.0.0\nDefault Gateway . . . :'}),
+    C('เครื่องนี้คุยกับเพื่อนในห้องได้ แต่ออกอินเทอร์เน็ตไม่ได้ สาเหตุคืออะไร',['Default Gateway ไม่อยู่ในวงเดียวกัน','IP ซ้ำกับเครื่องอื่น','สาย LAN ขาด','ต้องเปลี่ยนเป็น IPv6'],0,'เทียบ 3 ส่วนแรกของ IP กับ Gateway','เครื่องอยู่วง 192.168.1.x แต่ Gateway อยู่ 192.168.2.x',{pre:'IPv4 Address. . . . . : 192.168.1.50\nSubnet Mask . . . . . : 255.255.255.0\nDefault Gateway . . . : 192.168.2.1'}),
+    C('ping 8.8.8.8 ได้ แต่ ping ด้วยชื่อเว็บไม่ได้ ควรตรวจอะไรก่อน',['สาย LAN','Default Gateway','การตั้งค่า DNS Server','ไฟร์วอลล์ของ Switch'],2,'ใช้ IP ได้ แต่ใช้ชื่อไม่ได้','ออกอินเทอร์เน็ตได้แล้ว แต่แปลงชื่อเป็น IP ไม่ได้ ปัญหาคือ DNS',{pre:'C:\\> ping 8.8.8.8\nReply from 8.8.8.8: bytes=32 time=24ms TTL=117\n\nC:\\> ping www.google.com\nPing request could not find host www.google.com.'}),
+    C('ไฟ Link ที่พอร์ตแลนหลังเครื่องไม่ติดเลย ปัญหาน่าจะอยู่ชั้นใดของ OSI',['ชั้น 7 Application','ชั้น 3 Network','ชั้น 1 Physical','ชั้น 4 Transport'],2,'ไฟไม่ติด = ยังไม่มีสัญญาณเลย','ตรวจชั้น Physical ก่อน เช่น สายหลุด หัว RJ-45 เข้าไม่ดี พอร์ต Switch เสีย'),
+    C('Windows แจ้งเตือน IP address conflict หมายถึงอะไร',['มีสองเครื่องใช้ IP เดียวกัน','Subnet Mask ไม่ตรงกัน','DHCP หมด IP','ไวรัสโจมตี'],0,'conflict = ชนกัน','แก้โดยเปลี่ยน IP เครื่องหนึ่ง หรือใช้ DHCP'),
+    C('ออกแบบห้องแล็บ 40 เครื่อง ควรใช้ Topology และอุปกรณ์กลางแบบใด',['Star กับ Switch 48 พอร์ต','Bus กับสาย Coaxial','Ring กับ Hub','Mesh ต่อทุกเครื่องถึงกัน'],0,'แบบที่นิยมและดูแลง่ายที่สุด','Star + Switch ดูแลง่าย เพิ่มเครื่องได้ และสายเส้นหนึ่งเสียไม่กระทบเครื่องอื่น'),
+    C('ครูต้องการควบคุมเครื่องนักเรียนจากโต๊ะครู ควรใช้ซอฟต์แวร์ประเภทใด',['ซอฟต์แวร์ควบคุมระยะไกล (Remote Desktop)','โปรแกรมตัดต่อวิดีโอ','โปรแกรมบีบอัดไฟล์','เว็บเบราว์เซอร์'],0,'เล่ม 1 บท 8 หัวข้อที่ 6','Remote Desktop, AnyDesk หรือโปรแกรมควบคุมห้องเรียน ใช้ควบคุมเครื่องอื่นผ่านเครือข่าย')
+  ]
+},
+{
+  id:'r11', title:'ความปลอดภัยและการเข้ารหัส', ref:'เล่ม 1 บท 9 และเล่ม 2 บท 12',
+  blurb:'ภัยคุกคาม รหัสผ่าน Firewall และพื้นฐาน Cryptography',
+  intro:['รู้จักภัยคุกคามที่พบบ่อยและวิธีป้องกัน','ภารกิจท้าทายเป็นเรื่องการเข้ารหัส เช่น Caesar Cipher ที่เลื่อนตัวอักษรไปตามจำนวนที่กำหนด และกุญแจสาธารณะ'],
+  flag:'NET{guardian_mode}',
+  tasks:[
+    C('มัลแวร์ที่เข้ารหัสไฟล์ในเครื่องแล้วเรียกค่าไถ่ คืออะไร',['Ransomware','Adware','Spyware','Worm'],0,'Ransom = ค่าไถ่','Ransomware ป้องกันด้วยการสำรองข้อมูลและอัปเดตระบบ'),
+    C('อีเมลปลอมหลอกให้กดลิงก์ไปกรอกรหัสผ่าน เรียกว่าอะไร',['Phishing','DoS','Sniffing','Backup'],0,'ออกเสียงเหมือน Fishing ตกปลา','Phishing หลอกเอาข้อมูล ควรตรวจชื่อผู้ส่งและลิงก์ก่อนกด'),
+    C('โปรแกรมที่ดูเหมือนโปรแกรมดีแต่แฝงการทำงานอันตราย คืออะไร',['Trojan Horse','Firewall','Antivirus','Driver'],0,'ม้าไม้เมืองทรอย','Trojan ไม่แพร่กระจายเอง แต่หลอกให้ผู้ใช้ติดตั้ง'),
+    C('การส่งคำขอจำนวนมหาศาลเพื่อให้เซิร์ฟเวอร์ล่ม เรียกว่าอะไร',['DoS/DDoS','Phishing','Encryption','Patch'],0,'Denial of Service','DoS ทำให้บริการใช้งานไม่ได้'),
+    C('รหัสผ่านใดปลอดภัยที่สุด',['123456','password','วันเกิด 25052550','Lab#2026!pc07'],3,'ยาว มีตัวพิมพ์ใหญ่เล็ก ตัวเลข สัญลักษณ์','รหัสที่ดีควรยาว 12 ตัวขึ้นไปและผสมหลายชนิดอักขระ'),
+    C('Firewall ทำหน้าที่อะไร',['กรองข้อมูลเข้าออกเครือข่ายตามกฎที่ตั้งไว้','เพิ่มความเร็วอินเทอร์เน็ต','กำจัดไวรัสในไฟล์','แจก IP อัตโนมัติ'],0,'เหมือน รปภ. หน้าประตู','Firewall อนุญาตหรือบล็อกการเชื่อมต่อตามกฎ เช่น พอร์ตหรือ IP'),
+    C('ต้องการให้เครื่องในห้องเข้าเว็บได้อย่างเดียว ควรตั้ง Firewall อนุญาตพอร์ตใด',['TCP 80 และ 443 (และ DNS 53)','TCP 21 เท่านั้น','ทุกพอร์ต','ไม่อนุญาตพอร์ตใดเลย'],0,'นึกถึงพอร์ต HTTP, HTTPS และ DNS','เว็บใช้ 80/443 และต้องใช้ DNS (53) แปลงชื่อเว็บ'),
+    T('ถอดรหัส Caesar Cipher (เลื่อน 3) ของคำว่า QHWZRUN',['network'],'เลื่อนแต่ละตัวอักษรถอยหลัง 3 ตัว: Q → N','Q→N H→E W→T Z→W R→O U→R N→K = NETWORK',{c:true}),
+    T('เข้ารหัสคำว่า LAB ด้วย Caesar Cipher เลื่อนไปข้างหน้า 3',['ode'],'L → O','L→O A→D B→E = ODE',{c:true}),
+    C('ต้องการส่งข้อความลับให้ B ด้วยระบบกุญแจสาธารณะ ต้องเข้ารหัสด้วยกุญแจใด',['กุญแจสาธารณะของ B','กุญแจส่วนตัวของ B','กุญแจส่วนตัวของผู้ส่ง','ไม่ต้องใช้กุญแจ'],0,'ต้องให้ B เป็นคนเดียวที่เปิดได้','เข้ารหัสด้วย Public Key ของ B แล้วมีแค่ Private Key ของ B ที่ถอดได้',{c:true}),
+    C('ลายเซ็นดิจิทัล (Digital Signature) สร้างด้วยกุญแจใด',['กุญแจส่วนตัวของผู้ส่ง','กุญแจสาธารณะของผู้รับ','รหัส Wi-Fi','MAC Address'],0,'ลายเซ็นต้องมีแค่เจ้าของที่ทำได้','ผู้ส่งเซ็นด้วย Private Key ใครก็ตรวจได้ด้วย Public Key ของผู้ส่ง',{c:true}),
+    C('PGP (Pretty Good Privacy) นิยมใช้เข้ารหัสอะไร',['อีเมล','สายไฟ','จอภาพ','เมาส์'],0,'การสื่อสารระหว่างบุคคล','PGP ใช้เข้ารหัสและลงลายเซ็นอีเมลและไฟล์',{c:true})
+  ]
+},
+{
+  id:'r12', title:'บัญชีผู้ใช้ กลุ่ม และสิทธิ์การใช้งาน', ref:'เล่ม 1 บท 10', terminal:true,
+  quick:['help','whoami','net user','net user student','net localgroup','cls'],
+  blurb:'ตรวจสอบบัญชีผู้ใช้และกลุ่มด้วยคำสั่ง net user และกำหนดสิทธิ์',
+  intro:['ใช้เทอร์มินัลตรวจสอบบัญชีผู้ใช้และกลุ่มในเครื่อง LAB-PC07','การกำหนดสิทธิ์ที่ดีคือให้สิทธิ์เท่าที่จำเป็นต่อการทำงาน (Least Privilege)'],
+  flag:'NET{access_granted}',
+  tasks:[
+    T('ตอนนี้ล็อกอินอยู่ด้วยบัญชีอะไร (ตอบตามผลคำสั่ง whoami)',['lab-pc07\\student','student'],'พิมพ์ whoami','whoami แสดง ชื่อเครื่อง\\ชื่อผู้ใช้'),
+    T('บัญชีผู้ใช้ของครูในเครื่องนี้ชื่ออะไร',['teacher'],'net user แสดงรายชื่อบัญชีทั้งหมด','net user ใช้ดูบัญชีในเครื่อง'),
+    T('บัญชี student อยู่ในกลุ่ม (Local Group) ใด',['users','*users'],'net user student แล้วดู Local Group Memberships','บัญชีทั่วไปควรอยู่กลุ่ม Users'),
+    T('นอกจาก Administrator แล้ว ใครอยู่ในกลุ่ม Administrators อีก',['teacher'],'net localgroup administrators','สมาชิกกลุ่ม Administrators มีสิทธิ์จัดการเครื่องทั้งหมด'),
+    T('บัญชี Guest เปิดใช้งาน (Account active) อยู่หรือไม่ ตอบ yes หรือ no',['no'],'net user guest','ควรปิด Guest เพื่อความปลอดภัย'),
+    C('ตามหลัก Least Privilege บัญชีนักเรียนควรอยู่ในกลุ่มใด',['Users','Administrators','Guests ที่มีสิทธิ์ Admin','ทุกกลุ่ม'],0,'ให้สิทธิ์เท่าที่จำเป็น','นักเรียนใช้งานได้แต่ติดตั้งโปรแกรมหรือแก้ระบบไม่ได้'),
+    C('ต้องการให้นักเรียนเปิดอ่านไฟล์ในโฟลเดอร์ได้แต่แก้ไขไม่ได้ ควรให้สิทธิ์ใด',['Read','Full Control','Modify','Write'],0,'อ่านอย่างเดียว','สิทธิ์ Read เปิดดูได้ แต่แก้ไขหรือลบไม่ได้'),
+    C('ประโยชน์หลักของการสร้างกลุ่มผู้ใช้ (Group) คืออะไร',['กำหนดสิทธิ์ครั้งเดียวให้ผู้ใช้หลายคน','ทำให้เครื่องเร็วขึ้น','ไม่ต้องใช้รหัสผ่าน','ประหยัดพื้นที่ดิสก์'],0,'นึกถึงห้องเรียนที่มีนักเรียน 40 คน','กำหนดสิทธิ์ให้กลุ่ม สมาชิกทุกคนได้สิทธิ์ทันที จัดการง่าย'),
+    C('คำสั่งใดสร้างบัญชีผู้ใช้ชื่อ std01 รหัสผ่าน Lab@1234',['net user std01 Lab@1234 /add','net share std01','ipconfig /add std01','whoami std01'],0,'net user ... /add','net user ชื่อ รหัสผ่าน /add ใช้สร้างบัญชีผ่าน Command Prompt (ต้องใช้สิทธิ์ Admin)')
+  ]
+}
+];
+ROOMS.forEach((r,i)=>r.color=PIN[i%8]);
+/* เวลาทำแล็บ (นาที) ปรับได้ตามคาบเรียน */
+const MINUTES={r1:15,r2:15,r3:20,r4:20,r5:40,r6:20,r7:20,r8:15,r9:30,r10:45,r11:35,r12:35};
+ROOMS.forEach(r=>r.minutes=MINUTES[r.id]||20);
+
+/* ---------- Linux VM missions (work only on the deployed site with /v86 files) ---------- */
+const VM_BASE='v86/';
+const VMX={
+r5:{setup:"ip addr show lo",
+ tasks:[
+  T('ใน VM พิมพ์ ip addr show lo แล้วดูบรรทัด inet  IP ของการ์ด loopback คืออะไร',['127.0.0.1'],'บรรทัดที่ขึ้นต้นด้วย inet','การ์ด lo คือ loopback ใช้ทดสอบเครื่องตัวเองเสมอ'),
+  T('พิมพ์ ip addr add 192.168.50.10/26 brd + dev lo แล้ว ip addr show lo อีกครั้ง ค่า brd (Broadcast) ที่ Linux คำนวณให้คืออะไร',['192.168.50.63'],'ดูตัวเลขหลังคำว่า brd','/26 แบ่งช่วงละ 64 ดังนั้น 192.168.50.10 อยู่ในช่วง 0–63 Broadcast จึงเป็น .63'),
+  T('จากข้อที่แล้ว Network Address ของ 192.168.50.10/26 คืออะไร',['192.168.50.0'],'ตัวแรกของช่วง','ช่วง 0–63 ตัวแรกคือ Network Address'),
+  T('เพิ่ม IP 172.16.5.100/27 brd + ให้ lo แล้วดูค่า brd คืออะไร',['172.16.5.127'],'/27 แบ่งช่วงละ 32','100 อยู่ในช่วง 96–127 Broadcast จึงเป็น .127'),
+  C('ต้องการลบ IP 192.168.50.10/26 ออกจากการ์ด lo ใช้คำสั่งใด',['ip addr del 192.168.50.10/26 dev lo','ip addr remove all','ifconfig delete lo','ip link set lo down'],0,'add คู่กับ del','ip addr del ลบเฉพาะ IP ที่ระบุ')
+ ]},
+r9:{setup:"hostname srv-lab09; mkdir -p /srv/share; cd /srv/share; touch plan.txt budget.xls photo.jpg; echo TkVUe2hpZGRlbl9pbl9wbGFpbl9zaWdodH0= | base64 -d > .flag; cd /; clear",
+ tasks:[
+  T('พิมพ์ uname -s ระบบปฏิบัติการของ VM ชื่ออะไร',['linux'],'uname แสดงข้อมูลระบบ','Linux เป็นระบบปฏิบัติการที่ใช้ทำเซิร์ฟเวอร์เครือข่ายมากที่สุด'),
+  T('หลังกด "เตรียมโจทย์" ชื่อเครื่องของ VM คืออะไร',['srv-lab09'],'คำสั่ง hostname','hostname ใช้ดูและตั้งชื่อเครื่องใน Linux'),
+  T('โฟลเดอร์แชร์ /srv/share มีไฟล์ที่มองเห็นด้วยคำสั่ง ls กี่ไฟล์',['3'],'cd /srv/share แล้ว ls','ls ธรรมดาไม่แสดงไฟล์ซ่อน'),
+  T('ในโฟลเดอร์เดียวกันมีไฟล์ซ่อน ใช้ ls -a หาแล้ว cat ไฟล์นั้น ได้ flag อะไร',['NET{hidden_in_plain_sight}'],'ไฟล์ซ่อนชื่อขึ้นต้นด้วยจุด','ls -a แสดงไฟล์ทั้งหมดรวมไฟล์ซ่อน'),
+  C('ใน Linux ไฟล์ที่ชื่อขึ้นต้นด้วยอะไรจะเป็นไฟล์ซ่อน',['จุด (.)','ขีดล่าง (_)','ดอกจัน (*)','ดอลลาร์ ($)'],0,'ดูชื่อไฟล์ flag ในข้อที่แล้ว','ไฟล์ที่ขึ้นต้นด้วย . เป็นไฟล์ซ่อน เช่น .profile')
+ ]},
+r10:{setup:"ip link set lo down; echo 'nameserver 192.168.1.300' > /etc/resolv.conf; echo 'INFO link up eth0' > /var/log/netlab.log; echo 'INFO dhcp lease 192.168.20.57' >> /var/log/netlab.log; echo 'WARN slow response from 192.168.20.10' >> /var/log/netlab.log; echo 'ERROR gateway 192.168.20.254 unreachable' >> /var/log/netlab.log; echo 'INFO retry scheduled' >> /var/log/netlab.log; clear",
+ tasks:[
+  C('หลังเตรียมโจทย์ ping -c 2 127.0.0.1 ไม่ได้ ตรวจด้วย ip link show lo พบว่าสถานะ DOWN ต้องใช้คำสั่งใดแก้',['ip link set lo up','ip addr flush lo','hostname lo','rm /etc/resolv.conf'],0,'set ... up','ip link set <การ์ด> up เปิดการ์ดเครือข่าย'),
+  T('หลังแก้แล้ว ping -c 4 127.0.0.1 ได้ packet loss กี่เปอร์เซ็นต์ (ตอบตัวเลข)',['0','0%'],'ดูบรรทัดสรุปท้ายสุด','0% packet loss แปลว่าได้รับตอบกลับครบ'),
+  T('cat /etc/resolv.conf DNS Server ที่ตั้งไว้คือ IP อะไร',['192.168.1.300'],'ดูบรรทัด nameserver','ไฟล์ /etc/resolv.conf เก็บค่า DNS ของ Linux'),
+  C('IP ของ DNS ในข้อที่แล้วผิดเพราะอะไร',['ตัวเลขส่วนสุดท้ายเกิน 255','ต้องเป็น IPv6 เท่านั้น','DNS ต้องลงท้ายด้วย .1','ไม่ผิด'],0,'แต่ละส่วนของ IPv4 มี 8 บิต','8 บิตมีค่าได้ 0–255 เท่านั้น'),
+  T('ใช้ grep ERROR /var/log/netlab.log หาบรรทัดข้อผิดพลาด อุปกรณ์ IP ใดติดต่อไม่ได้',['192.168.20.254'],'grep แสดงเฉพาะบรรทัดที่ตรงคำค้น','การอ่าน log ช่วยหาต้นเหตุปัญหาได้เร็ว'),
+  C('คำสั่งใดแสดงเฉพาะบรรทัดที่มีคำว่า WARN ในไฟล์ log',['grep WARN /var/log/netlab.log','cat WARN','ls WARN /var/log','find WARN'],0,'เหมือนข้อที่แล้ว','grep <คำ> <ไฟล์>')
+ ]},
+r11:{setup:"mkdir -p /lab; cd /lab; echo TkVUe2Jhc2U2NF9pc19ub3RfZW5jcnlwdGlvbn0= > secret.b64; echo netlab-release-1.0-modified > app1.bin; echo netlab-release-1.0 > app2.bin; echo netlab-release-1.0-fake > app3.bin; echo 1dfa6c87f1474abac827f8ddcdc173c622655a6932e3ef70ad16498d48e1b7f4 > checksum.txt; echo private-key-demo > key.pem; chmod 600 key.pem; cd /; clear",
+ tasks:[
+  T('พิมพ์ echo -n network | md5sum ค่า MD5 ที่ได้คืออะไร',['91e02cd2b8621d0c05197f645668c5c4'],'คัดลอกตัวอักษร 32 ตัวแรก','Hash ของข้อความเดิมได้ค่าเดิมเสมอ เปลี่ยนแม้ตัวอักษรเดียวค่าจะต่างไปทั้งหมด'),
+  T('ไฟล์ /lab/secret.b64 เข้ารหัสแบบ Base64 ไว้ ถอดด้วย base64 -d /lab/secret.b64 ได้ flag อะไร',['NET{base64_is_not_encryption}'],'base64 -d คือ decode','Base64 เป็นแค่การแปลงรูปแบบข้อมูล'),
+  C('ทำไม Base64 จึงไม่ใช่การเข้ารหัสที่ปลอดภัย',['ใครก็ถอดกลับได้โดยไม่ต้องใช้กุญแจ','เพราะยาวเกินไป','เพราะใช้ได้แค่ภาษาอังกฤษ','ปลอดภัยมากอยู่แล้ว'],0,'ข้อที่แล้วคุณใช้กุญแจหรือเปล่า','การเข้ารหัสจริงต้องใช้กุญแจ เช่น AES หรือ RSA'),
+  T('ใช้ sha256sum /lab/app*.bin เทียบกับค่าใน /lab/checksum.txt ไฟล์ใดเป็นต้นฉบับที่ไม่ถูกแก้ไข',['app2.bin','app2'],'ค่า hash ต้องตรงกันทุกตัวอักษร','การตรวจ checksum ใช้ยืนยันว่าไฟล์ที่ดาวน์โหลดไม่ถูกดัดแปลง'),
+  T('ใช้ ls -l /lab/key.pem สิทธิ์ของไฟล์แสดงเป็นอย่างไร (10 ตัวอักษรแรก)',['-rw-------'],'ตัวอักษรชุดแรกของบรรทัด','600 = เจ้าของอ่าน/เขียนได้ คนอื่นไม่มีสิทธิ์ เหมาะกับไฟล์กุญแจ',{exact:true})
+ ]},
+r12:{setup:"mkdir -p /lab/project; echo TkVUe2xlYXN0X3ByaXZpbGVnZX0= | base64 -d > /lab/report.txt; chmod 640 /lab/report.txt; chmod 755 /lab; clear",
+ tasks:[
+  C('สร้างผู้ใช้ชื่อ std01 ใน VM (BusyBox Linux) ใช้คำสั่งใด',['adduser -D std01','net user std01 /add','newuser std01','mkdir /home/std01'],0,'Linux ไม่ใช้คำสั่ง net user','adduser -D สร้างผู้ใช้โดยยังไม่ตั้งรหัสผ่าน (Ubuntu ใช้ useradd หรือ adduser)'),
+  T('หลังสร้าง std01 แล้ว ดูด้วย grep std01 /etc/passwd โฟลเดอร์ Home ของ std01 คือ path ใด',['/home/std01'],'คั่นด้วย : ช่องรองสุดท้าย','/etc/passwd เก็บข้อมูลบัญชีผู้ใช้ทั้งหมด'),
+  T('ls -l /lab/report.txt แสดงสิทธิ์ -rw-r----- เขียนเป็นตัวเลขได้เท่าไร',['640'],'r=4 w=2 x=1 คิดทีละกลุ่ม','เจ้าของ rw=6 กลุ่ม r=4 คนอื่น 0 = 640'),
+  T('สลับเป็น std01 ด้วย su std01 แล้ว cat /lab/report.txt ได้ข้อความแจ้งว่าอะไร (ภาษาอังกฤษ)',['permissiondenied'],'ดูคำท้ายข้อความ error','std01 ไม่ใช่เจ้าของและไม่อยู่ในกลุ่ม จึงไม่มีสิทธิ์อ่าน',{contains:true}),
+  T('พิมพ์ exit กลับเป็น root แล้วอ่านไฟล์เดิม flag คืออะไร',['NET{least_privilege}'],'cat /lab/report.txt','root มีสิทธิ์สูงสุดในระบบ'),
+  T('ใช้ chmod 750 /lab/project แล้ว ls -ld /lab/project สิทธิ์แสดงเป็นอย่างไร (10 ตัวอักษรแรก)',['drwxr-x---'],'d = directory','7=rwx 5=r-x 0=---',{exact:true})
+ ]}
+};
+ROOMS.forEach(r=>{if(VMX[r.id]){r.vmSetup=VMX[r.id].setup;r.vmTasks=VMX[r.id].tasks;}});
+
+/* ---------- state ---------- */
+const KEY='netlab-v2';
+let S={name:'',done:{},hints:{},timers:{}};
+try{const raw=localStorage.getItem(KEY); if(raw) S=Object.assign(S,JSON.parse(raw));}catch(e){}
+if(!S.timers) S.timers={};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const orderState={}; // taskId -> {pool:[idx], picked:[idx]}
+
+const tid=(r,i)=>r.id+'-'+i;
+const roomDone=r=>r.tasks.filter((t,i)=>S.done[tid(r,i)]).length;
+const totalTasks=ROOMS.reduce((a,r)=>a+r.tasks.length,0);
+const totalDone=()=>ROOMS.reduce((a,r)=>a+roomDone(r),0);
+const vid=(r,i)=>r.id+'-vm'+i;
+const vmDone=r=>(r.vmTasks||[]).filter((t,i)=>S.done[vid(r,i)]).length;
+const pts=id=>S.done[id]?(S.hints[id]?5:10):0;
+const score=()=>ROOMS.reduce((a,r)=>a+r.tasks.reduce((b,t,i)=>b+pts(tid(r,i)),0)+(r.vmTasks||[]).reduce((b,t,i)=>b+pts(vid(r,i)),0),0);
+const totalVM=ROOMS.reduce((a,r)=>a+(r.vmTasks||[]).length,0);
+const norm=s=>String(s).toLowerCase().replace(/\s+/g,'').replace(/[:\-_]/g,'');
+
+const app=document.getElementById('app');
+function el(tag,attrs={},...kids){
+  const e=document.createElement(tag);
+  for(const k in attrs){
+    if(k==='class')e.className=attrs[k];
+    else if(k==='style')e.setAttribute('style',attrs[k]);
+    else if(k.startsWith('on'))e.addEventListener(k.slice(2),attrs[k]);
+    else e.setAttribute(k,attrs[k]);
+  }
+  kids.flat().forEach(c=>{if(c==null||c===false)return;e.append(c.nodeType?c:document.createTextNode(c));});
+  return e;
+}
+
+/* ---------- home ---------- */
+function home(){
+  stopVM(); stopTick();
+  app.innerHTML='';
+  const pins=[['wo',1],['o',2],['wg',3],['bl',4],['wb',5],['g',6],['wbr',7],['br',8]];
+  const wires=el('div',{class:'wires','aria-hidden':'true'},pins.map(([c,n],i)=>
+    el('div',{class:'wire'+(c.startsWith('w')?' w':''),style:`background:${WIRE[c]};height:${60+ (i%2?18:40)}%;animation-delay:${i*60}ms`},el('span',{},String(n)))));
+  const pct=Math.round(totalDone()/totalTasks*100);
+  app.append(
+    wires,
+    el('h1',{},'NetLab ห้องปฏิบัติการเครือข่ายคอมพิวเตอร์'),
+    el('p',{class:'lede'},'12 ห้องตามหนังสือเรียนสองเล่ม ตอบโจทย์ให้ครบเพื่อรับ flag ของแต่ละห้อง ข้อที่มีป้ายท้าทายมาจากเล่มที่สอง ใช้คำใบ้ได้แต่คะแนนข้อนั้นจะเหลือครึ่งเดียว ความคืบหน้าบันทึกไว้ในเครื่องนี้'),
+    el('div',{class:'namebox'},
+      el('label',{for:'nm'},'ชื่อ–ชั้น–เลขที่'),
+      el('input',{id:'nm',placeholder:'เช่น สมชาย ใจดี ปวช.2/1 เลขที่ 5',value:S.name,oninput:e=>{S.name=e.target.value;save();}})
+    ),
+    el('div',{class:'progress'},el('span',{},`ทำแล้ว ${totalDone()} จาก ${totalTasks} ข้อ (VM ${ROOMS.reduce((a,r)=>a+vmDone(r),0)}/${totalVM})`),el('strong',{},score()+' คะแนน')),
+    el('div',{class:'bar'},el('i',{style:`width:${pct}%`})),
+    el('ul',{class:'rooms'},ROOMS.map((r,ri)=>{
+      const d=roomDone(r), full=d===r.tasks.length;
+      return el('li',{},el('button',{class:'room'+(full?' done':''),onclick:()=>openRoom(ri)},
+        el('div',{class:'strip',style:`background:${r.color}`}),
+        el('div',{class:'body'},el('div',{class:'num'},'ห้อง '+(ri+1),r.challengeRoom?el('span',{class:'tag'},'ห้องท้าทาย'):null,r.vmTasks?el('span',{class:'tag vm'},'Linux VM'):null),el('h2',{},r.title),el('p',{},r.blurb)),
+        el('div',{class:'stat'},el('b',{},full?'✓':`${d}/${r.tasks.length}`),full?'ผ่านแล้ว':'ข้อ',el('span',{class:'tstat'},!S.timers[r.id]?`${r.minutes} นาที`:S.timers[r.id].status==='running'?'กำลังทำ':S.timers[r.id].status==='timeout'?'หมดเวลา':'ส่งแล้ว'))
+      ));
+    })),
+    el('div',{class:'foot'},
+      el('button',{class:'btn',onclick:summary},'ดูใบสรุปผล'),
+      el('button',{class:'btn ghost',onclick:()=>{if(confirm('ล้างความคืบหน้าทั้งหมดในเครื่องนี้?')){S={name:S.name,done:{},hints:{},timers:{}};save();home();}}},'เริ่มใหม่')
+    )
+  );
+  window.scrollTo(0,0);
+}
+
+/* ---------- room ---------- */
+
+/* ---------- lab timer ---------- */
+let TICK=null;
+const fmt=ms=>{ms=Math.max(0,ms);const t=Math.round(ms/1000);const m=Math.floor(t/60),sec=t%60;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');};
+const timerOf=r=>S.timers[r.id];
+function stopTick(){ if(TICK){clearInterval(TICK);TICK=null;} }
+function startLab(ri){
+  const r=ROOMS[ri];
+  S.timers[r.id]={start:Date.now(),limit:r.minutes*60000,status:'running'};
+  save(); openRoom(ri);
+}
+function finishLab(ri,status){
+  const r=ROOMS[ri], t=timerOf(r); if(!t||t.status!=='running')return;
+  t.status=status; t.end=status==='timeout'?t.start+t.limit:Date.now(); save();
+  stopVM(); openRoom(ri);
+}
+function allDone(r){ return roomDone(r)===r.tasks.length && vmDone(r)===(r.vmTasks||[]).length; }
+function timerBar(r,ri){
+  const t=timerOf(r);
+  if(t.status!=='running'){
+    const used=fmt(t.end-t.start);
+    return el('div',{class:'timer done'},
+      el('span',{},t.status==='timeout'?'หมดเวลาแล้ว':'ส่งงานแล้ว'),
+      el('b',{},'ใช้เวลา '+used+' จาก '+r.minutes+' นาที'));
+  }
+  const left=el('b',{class:'clock'},fmt(t.start+t.limit-Date.now()));
+  const bar=el('div',{class:'timer'},
+    el('span',{},'เวลาที่เหลือ'),left,
+    el('button',{class:'btn ghost',onclick:()=>{ if(confirm('ส่งงานและหยุดจับเวลา? หลังส่งแล้วจะแก้คำตอบไม่ได้')) finishLab(ri,'finished'); }},'ส่งงาน'));
+  stopTick();
+  const upd=()=>{
+    const ms=t.start+t.limit-Date.now();
+    left.textContent=fmt(ms);
+    bar.classList.toggle('warn',ms<=5*60000); bar.classList.toggle('urgent',ms<=60000);
+    if(ms<=0){ stopTick(); finishLab(ri,'timeout'); }
+  };
+  upd(); TICK=setInterval(upd,1000);
+  return bar;
+}
+function startCard(r,ri){
+  const n=r.tasks.length+(r.vmTasks||[]).length;
+  return el('div',{class:'startcard'},
+    el('p',{class:'big'},`เวลาทำแล็บ ${r.minutes} นาที`),
+    el('p',{},`มีทั้งหมด ${n} ข้อ${r.vmTasks?` (รวมภารกิจ Linux VM ${r.vmTasks.length} ข้อ)`:''} เมื่อกดเริ่ม ระบบจะเริ่มจับเวลาทันที ปิดหน้าเว็บแล้วเวลาก็ยังเดินต่อ เมื่อหมดเวลาหรือกดส่งงาน จะแก้คำตอบไม่ได้อีก`),
+    el('button',{class:'btn start',onclick:()=>startLab(ri)},'Start เริ่มทำแล็บ'));
+}
+
+function openRoom(ri){
+  stopVM();
+  const r=ROOMS[ri];
+  app.innerHTML='';
+  app.append(
+    el('button',{class:'back',onclick:home},'‹ กลับหน้ารวมห้อง'),
+    el('div',{class:'roomhead'},el('div',{class:'rs',style:`background:${r.color}`}),el('div',{},
+      el('div',{class:'num',style:'font:600 13px JetBrains Mono,monospace;color:var(--muted)'},'ห้อง '+(ri+1)),
+      el('h1',{},r.title),el('div',{class:'ref'},'อ้างอิง '+r.ref))),
+    el('div',{class:'intro'},r.intro.map(p=>el('p',{},p)))
+  );
+  stopTick();
+  const t=timerOf(r);
+  if(!t){ app.append(startCard(r,ri)); window.scrollTo(0,0); return; }
+  if(t.status==='running' && Date.now()>=t.start+t.limit){ t.status='timeout'; t.end=t.start+t.limit; save(); }
+  app.append(timerBar(r,ri));
+  if(r.terminal) app.append(terminal(r.quick));
+  r.tasks.forEach((t,i)=>app.append(taskCard(r,ri,t,i)));
+  if(r.vmTasks){
+    app.append(el('h2',{class:'vmhead'},'ภารกิจ Linux VM'),
+      el('p',{class:'vmnote'},'ทำบนคอมพิวเตอร์ห้องแล็บ เปิด VM แล้วกด "เตรียมโจทย์" เมื่อเห็น prompt ของ Linux ภารกิจส่วนนี้ได้คะแนนเพิ่ม แต่ไม่บังคับสำหรับการผ่านห้อง'),
+      vmPanel(r));
+    r.vmTasks.forEach((t,i)=>app.append(taskCard(r,ri,t,i,vid(r,i))));
+  }
+  const flagBox=el('div',{id:'flagbox'});
+  app.append(flagBox);
+  renderFlag(r,ri);
+  if(t.status!=='running'){
+    app.querySelectorAll('.task input,.task button,.vm button').forEach(b=>b.disabled=true);
+  }
+  window.scrollTo(0,0);
+}
+function renderFlag(r,ri){
+  const box=document.getElementById('flagbox'); if(!box)return;
+  box.innerHTML='';
+  if(roomDone(r)===r.tasks.length){
+    box.append(el('div',{class:'flag'},
+      el('p',{style:'margin:0 0 6px;font-weight:600'},'ผ่านห้องนี้แล้ว นี่คือ flag ของคุณ'),
+      el('code',{},r.flag),
+      el('div',{style:'margin-top:12px'},
+        ri<ROOMS.length-1?el('button',{class:'btn',onclick:()=>openRoom(ri+1)},'ไปห้องถัดไป'):el('button',{class:'btn',onclick:summary},'ดูใบสรุปผล'))
+    ));
+  }
+}
+
+function taskCard(r,ri,t,i,idOverride){
+  const id=idOverride||tid(r,i), solved=!!S.done[id];
+  const card=el('div',{class:'task'+(solved?' solved':'')});
+  const msg=el('div',{class:'msg'+(solved?' ok':'')},solved?'ถูกต้อง':'');
+  const q=el('div',{class:'qtext'},t.c?el('span',{class:'tag'},'ท้าทาย'):null,el('p',{},t.q));
+  if(t.pre) q.append(el('pre',{class:'out'},t.pre));
+
+  const markSolved=()=>{
+    S.done[id]=true; save();
+    card.classList.add('solved'); msg.className='msg ok'; msg.textContent='ถูกต้อง';
+    if(t.explain && !card.querySelector('.explain')) q.append(el('div',{class:'explain'},t.explain));
+    renderFlag(r,ri);
+    if(allDone(r)) setTimeout(()=>finishLab(ri,'finished'),1200);
+  };
+  const wrong=txt=>{msg.className='msg bad';msg.textContent=txt||'ยังไม่ถูก ลองใหม่อีกครั้ง';};
+
+  if(t.type==='text'){
+    const inp=el('input',{placeholder:'พิมพ์คำตอบ',autocomplete:'off',autocapitalize:'off',spellcheck:'false','aria-label':'คำตอบ'});
+    if(solved){inp.value=t.answers[0];inp.disabled=true;}
+    const check=()=>{
+      if(S.done[id])return;
+      const nf=t.exact?(s=>String(s).toLowerCase().replace(/\s+/g,'')):norm; const v=nf(inp.value); if(!v){wrong('พิมพ์คำตอบก่อนกดตรวจ');return;}
+      if(t.answers.some(a=>t.contains?v.includes(nf(a)):nf(a)===v)){inp.disabled=true;btn.disabled=true;markSolved();}
+      else wrong();
+    };
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')check();});
+    const btn=el('button',{class:'btn',onclick:check},'ตรวจคำตอบ'); if(solved)btn.disabled=true;
+    q.append(el('div',{class:'row'},inp,btn));
+  }
+  if(t.type==='choice'){
+    const box=el('div',{class:'choices'});
+    t.options.forEach((o,oi)=>{
+      const b=el('button',{class:'choice'+(solved&&oi===t.correct?' picked-ok':'')},o);
+      b.addEventListener('click',()=>{
+        if(S.done[id])return;
+        if(oi===t.correct){b.className='choice picked-ok';markSolved();}
+        else{b.className='choice picked-bad';wrong();}
+      });
+      box.append(b);
+    });
+    q.append(box);
+  }
+  if(t.type==='order'){
+    q.append(orderWidget(id,t,solved,markSolved,wrong));
+  }
+  q.append(msg);
+  if(solved && t.explain) q.append(el('div',{class:'explain'},t.explain));
+  // hint
+  if(t.hint){
+    const hb=el('div');
+    const showHint=()=>{hb.innerHTML='';hb.append(el('div',{class:'hinttext'},t.hint));};
+    if(S.hints[id]) showHint();
+    else hb.append(el('button',{class:'hint',onclick:()=>{S.hints[id]=true;save();showHint();}},'ดูคำใบ้ (คะแนนข้อนี้เหลือ 5)'));
+    q.append(hb);
+  }
+  card.append(el('div',{class:'tq'},el('div',{class:'tn'},(idOverride?'VM':'')+String(i+1).padStart(2,'0')),q));
+  return card;
+}
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  if(a.every((v,i)=>v===i)) return shuffle(a); return a;}
+function orderWidget(id,t,solved,markSolved,wrong){
+  const box=el('div');
+  if(!orderState[id]) orderState[id]={pool:shuffle(t.items.map((_,i)=>i)),picked:[]};
+  const st=orderState[id];
+  if(solved){st.picked=t.items.map((_,i)=>i);st.pool=[];}
+  const chipFace=it=>[it.sw?el('span',{class:'sw',style:`background:${it.sw}`}):null,it.t];
+  function draw(){
+    box.innerHTML='';
+    const slots=el('div',{class:'slots'});
+    t.labels.forEach((lab,si)=>{
+      const idx=st.picked[si];
+      const s=el('button',{class:'slot'+(idx!=null?' filled':''),'aria-label':lab+(idx!=null?' '+t.items[idx].t+' แตะเพื่อเอาออก':' ว่าง')},
+        el('span',{class:'pin'},lab), idx!=null?el('span',{style:'display:inline-flex;gap:8px;align-items:center'},chipFace(t.items[idx])):el('span',{style:'color:var(--muted);font-size:14px'},'แตะตัวเลือกด้านล่างเพื่อใส่'));
+      if(idx!=null && !S.done[id]) s.addEventListener('click',()=>{st.picked.splice(si,1);st.pool.push(idx);draw();});
+      slots.append(s);
+    });
+    box.append(slots);
+    if(!S.done[id]){
+      box.append(el('div',{class:'pool'},st.pool.map(idx=>el('button',{class:'chip',onclick:()=>{st.pool=st.pool.filter(x=>x!==idx);st.picked.push(idx);draw();}},chipFace(t.items[idx])))));
+      const full=st.picked.length===t.items.length;
+      box.append(el('div',{class:'row'},
+        el('button',{class:'btn',onclick:()=>{
+          if(st.picked.every((v,i)=>v===i)){markSolved();draw();}
+          else{const right=st.picked.filter((v,i)=>v===i).length;wrong(`ถูกตำแหน่ง ${right} จาก ${t.items.length} ช่อง แตะช่องที่ผิดเพื่อเอาออกแล้วลองใหม่`);}
+        }},'ตรวจลำดับ'),
+        el('button',{class:'btn ghost',onclick:()=>{st.pool=shuffle(t.items.map((_,i)=>i));st.picked=[];draw();}},'ล้าง')
+      ));
+      if(!full) box.lastChild.firstChild.disabled=true;
+    }
+  }
+  draw();
+  return box;
+}
+
+/* ---------- terminal ---------- */
+function terminal(quickList){
+  const screen=el('div',{class:'screen',role:'log','aria-live':'polite'});
+  const inp=el('input',{autocomplete:'off',autocapitalize:'off',spellcheck:'false','aria-label':'พิมพ์คำสั่ง'});
+  const hist=[];let hp=0,busy=false;
+  const PROMPT='C:\\Users\\student>';
+  const put=(txt,cls)=>{txt.split('\n').forEach(l=>screen.append(el('div',{class:'line'+(cls?' '+cls:'')},l||' ')));screen.scrollTop=screen.scrollHeight;};
+  const slow=async lines=>{busy=true;for(const l of lines){await new Promise(r=>setTimeout(r,l.d||0));put(l.t);}busy=false;};
+
+  const HOSTS={'192.168.20.1':[64,1],'192.168.20.10':[128,1],'192.168.20.57':[128,0],'127.0.0.1':[128,0],'localhost':[128,0],
+    '8.8.8.8':[117,24],'203.0.113.80':[52,18],'www.netlab.test':[52,18]};
+  const DNS={'www.netlab.test':'203.0.113.80','dns.google':'8.8.8.8','localhost':'127.0.0.1','lab-pc07':'192.168.20.57'};
+  const isIP=s=>/^\d{1,3}(\.\d{1,3}){3}$/.test(s)&&s.split('.').every(n=>+n<256);
+
+  function ping(target){
+    if(!target) return put('Usage: ping <IP address หรือ ชื่อโฮสต์>');
+    const t=target.toLowerCase();
+    let ip=isIP(t)?t:DNS[t];
+    if(!ip) return put(`Ping request could not find host ${target}. Please check the name and try again.`);
+    const head=ip===t?`Pinging ${ip} with 32 bytes of data:`:`Pinging ${t} [${ip}] with 32 bytes of data:`;
+    const lines=[{t:head}];let recv=4,times=[];
+    if(HOSTS[ip]){
+      const [ttl,base]=HOSTS[ip];
+      for(let i=0;i<4;i++){const ms=base===0?0:base+Math.floor(Math.random()*3);times.push(ms);
+        lines.push({t:`Reply from ${ip}: bytes=32 time${ms===0?'<1':'='+ms}ms TTL=${ttl}`,d:450});}
+    }else if(ip.startsWith('192.168.20.')&&ip!=='192.168.20.99'){
+      for(let i=0;i<4;i++) lines.push({t:`Reply from 192.168.20.57: Destination host unreachable.`,d:900});
+    }else{
+      recv=0;for(let i=0;i<4;i++) lines.push({t:'Request timed out.',d:900});
+    }
+    lines.push({t:'',d:100},{t:`Ping statistics for ${ip}:`},{t:`    Packets: Sent = 4, Received = ${recv}, Lost = ${4-recv} (${(4-recv)*25}% loss),`});
+    if(times.length){const mn=Math.min(...times),mx=Math.max(...times),av=Math.round(times.reduce((a,b)=>a+b)/4);
+      lines.push({t:'Approximate round trip times in milli-seconds:'},{t:`    Minimum = ${mn}ms, Maximum = ${mx}ms, Average = ${av}ms`});}
+    return slow(lines);
+  }
+  function tracert(target){
+    if(!target) return put('Usage: tracert <IP address หรือ ชื่อโฮสต์>');
+    const t=target.toLowerCase(); const ip=isIP(t)?t:DNS[t];
+    if(!ip) return put(`Unable to resolve target system name ${target}.`);
+    const hops=[['192.168.20.1','gateway.lab.local'],['10.10.0.1',''],['172.20.1.1',''],['198.51.100.9','']];
+    if(ip==='8.8.8.8') hops.push(['8.8.8.8','dns.google']);
+    else if(ip==='203.0.113.80'){hops.push(['198.51.100.30',''],['203.0.113.80','www.netlab.test']);}
+    else if(ip.startsWith('192.168.20.')){hops.length=0;hops.push([ip,'']);}
+    else {hops.push(['*','']);}
+    const lines=[{t:`Tracing route to ${t===ip?ip:t+' ['+ip+']'}`},{t:'over a maximum of 30 hops:'},{t:''}];
+    hops.forEach(([h,n],i)=>{
+      const pad=String(i+1).padStart(3);
+      if(h==='*') lines.push({t:`${pad}     *        *        *     Request timed out.`,d:1200});
+      else{const b=i===0?1:4+i*5;const f=x=>(x<=1?'<1 ms':x+' ms').padStart(6);
+        lines.push({t:`${pad}  ${f(b)}  ${f(b+1)}  ${f(b)}  ${n?n+' ['+h+']':h}`,d:600});}
+    });
+    lines.push({t:''},{t:'Trace complete.'});
+    return slow(lines);
+  }
+  const CMDS={
+    help:()=>put(`คำสั่งที่ใช้ได้:
+  ipconfig          ดู IP, Subnet Mask, Default Gateway
+  ipconfig /all     ดูรายละเอียดทั้งหมด (MAC, DNS, DHCP)
+  ping <ปลายทาง>    ทดสอบการเชื่อมต่อ
+  tracert <ปลายทาง> ดูเส้นทางที่ข้อมูลเดินทาง
+  nslookup <ชื่อ>    ถาม DNS ว่าชื่อนี้คือ IP อะไร
+  arp -a            ดูตาราง IP ↔ MAC ในวงเครือข่าย
+  hostname          ดูชื่อเครื่อง
+  getmac            ดู MAC Address
+  whoami            ดูบัญชีที่ล็อกอินอยู่
+  net user [ชื่อ]    ดูบัญชีผู้ใช้
+  net localgroup [กลุ่ม] ดูกลุ่มผู้ใช้
+  net share         ดูโฟลเดอร์ที่แชร์
+  net view          ดูเครื่องใน Workgroup
+  cls               ล้างหน้าจอ`),
+    whoami:()=>put('lab-pc07\\student'),
+    net:a=>netCmd(a),
+    ipconfig:a=>{
+      if(a[0]&&a[0].toLowerCase()==='/all') return put(`
+Windows IP Configuration
+
+   Host Name . . . . . . . . . . . . : LAB-PC07
+   Primary Dns Suffix  . . . . . . . : lab.local
+
+Ethernet adapter Ethernet:
+
+   Description . . . . . . . . . . . : Realtek PCIe GbE Family Controller
+   Physical Address. . . . . . . . . : 00-1A-2B-3C-4D-5E
+   DHCP Enabled. . . . . . . . . . . : Yes
+   IPv4 Address. . . . . . . . . . . : 192.168.20.57(Preferred)
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Lease Obtained. . . . . . . . . . : Tuesday, 8:02:14 AM
+   Default Gateway . . . . . . . . . : 192.168.20.1
+   DHCP Server . . . . . . . . . . . : 192.168.20.1
+   DNS Servers . . . . . . . . . . . : 192.168.20.10
+`);
+      if(a[0]) return put(`Error: unrecognized or incomplete command line.`);
+      put(`
+Windows IP Configuration
+
+Ethernet adapter Ethernet:
+
+   Connection-specific DNS Suffix  . : lab.local
+   IPv4 Address. . . . . . . . . . . : 192.168.20.57
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.20.1
+`);
+    },
+    ping:a=>ping(a[0]),
+    tracert:a=>tracert(a[0]),
+    nslookup:a=>{
+      const head='Server:  dns.lab.local\nAddress:  192.168.20.10\n';
+      if(!a[0]) return put(head+'\n(ในแล็บนี้ให้พิมพ์ชื่อต่อท้าย เช่น nslookup www.netlab.test)');
+      const n=a[0].toLowerCase(), ip=DNS[n];
+      if(!ip) return put(head+`\n*** dns.lab.local can't find ${a[0]}: Non-existent domain`);
+      put(head+`\nNon-authoritative answer:\nName:    ${n}\nAddress:  ${ip}`);
+    },
+    arp:a=>{
+      if(!a[0]||a[0].toLowerCase()!=='-a') return put('Usage: arp -a');
+      put(`
+Interface: 192.168.20.57 --- 0xb
+  Internet Address      Physical Address      Type
+  192.168.20.1          00-50-56-c0-00-01     dynamic
+  192.168.20.10         00-50-56-c0-00-0a     dynamic
+  192.168.20.23         3c-52-82-1f-9a-10     dynamic
+  192.168.20.255        ff-ff-ff-ff-ff-ff     static
+  224.0.0.22            01-00-5e-00-00-16     static
+`);
+    },
+    hostname:()=>put('LAB-PC07'),
+    getmac:()=>put(`
+Physical Address    Transport Name
+=================== ==========================================================
+00-1A-2B-3C-4D-5E   \\Device\\Tcpip_{4F2A91C3-7B1E-4D22-9A60-11C0E5B7D3A8}`),
+    cls:()=>{screen.innerHTML='';}
+  };
+  const OK='The command completed successfully.';
+  const USERS={
+    student:{full:'Student Lab',cmt:'Student account',act:'Yes',grp:'*Users'},
+    teacher:{full:'Teacher NetLab',cmt:'Teacher account',act:'Yes',grp:'*Administrators       *Users'},
+    administrator:{full:'',cmt:'Built-in account for administering the computer',act:'No',grp:'*Administrators'},
+    guest:{full:'',cmt:'Built-in account for guest access',act:'No',grp:'*Guests'}
+  };
+  const GROUPS={administrators:['Administrator','teacher'],users:['student','teacher','NT AUTHORITY\\Authenticated Users'],guests:['Guest'],'remotedesktopusers':[]};
+  function netCmd(a){
+    const sub=(a[0]||'').toLowerCase();
+    if(sub==='user'){
+      if(a.includes('/add')||a.includes('/delete')) return put('System error 5 has occurred.\n\nAccess is denied.\n(บัญชี student ไม่มีสิทธิ์ Administrator จึงสร้าง/ลบบัญชีไม่ได้)');
+      if(!a[1]) return put(`\nUser accounts for \\\\LAB-PC07\n\n-------------------------------------------------------------------------------\nAdministrator            DefaultAccount           Guest\nstudent                  teacher                  WDAGUtilityAccount\n${OK}`);
+      const u=USERS[a[1].toLowerCase()];
+      if(!u) return put('The user name could not be found.\n\nMore help is available by typing NET HELPMSG 2221.');
+      const nm=a[1].toLowerCase()==='administrator'?'Administrator':a[1].toLowerCase()==='guest'?'Guest':a[1].toLowerCase();
+      return put(`User name                    ${nm}\nFull Name                    ${u.full}\nComment                      ${u.cmt}\nAccount active               ${u.act}\nAccount expires              Never\n\nPassword required            ${nm==='Guest'?'No':'Yes'}\nUser may change password     Yes\n\nLocal Group Memberships      ${u.grp}\nGlobal Group memberships     *None\n${OK}`);
+    }
+    if(sub==='localgroup'){
+      if(!a[1]) return put(`\nAliases for \\\\LAB-PC07\n\n-------------------------------------------------------------------------------\n*Administrators\n*Guests\n*Remote Desktop Users\n*Users\n${OK}`);
+      const key=a.slice(1).join('').toLowerCase(), g=GROUPS[key];
+      if(!g) return put('There is no such global user or group.');
+      const name={administrators:'Administrators',users:'Users',guests:'Guests',remotedesktopusers:'Remote Desktop Users'}[key];
+      return put(`Alias name     ${name}\n\nMembers\n\n-------------------------------------------------------------------------------\n${g.join('\n')}\n${OK}`);
+    }
+    if(sub==='share') return put(`\nShare name   Resource                        Remark\n\n-------------------------------------------------------------------------------\nC$           C:\\                             Default share\nIPC$                                         Remote IPC\nADMIN$       C:\\Windows                      Remote Admin\nHomework     C:\\Share\\Homework               Student homework\n${OK}`);
+    if(sub==='view') return put(`Server Name            Remark\n\n-------------------------------------------------------------------------------\n\\\\LAB-PC01\n\\\\LAB-PC07\n\\\\TEACHER-PC           Teacher\n${OK}\n\n(Workgroup: NETLAB)`);
+    put('The syntax of this command is:\n\nNET [ USER | LOCALGROUP | SHARE | VIEW ]');
+  }
+  CMDS['tracert.exe']=CMDS.tracert; CMDS['ping.exe']=CMDS.ping;
+
+  function run(raw){
+    const line=raw.trim();
+    put(PROMPT+line,'prompt');
+    if(!line)return;
+    hist.push(line);hp=hist.length;
+    const [c,...args]=line.split(/\s+/);
+    const f=CMDS[c.toLowerCase()];
+    if(f) f(args);
+    else put(`'${c}' is not recognized as an internal or external command,\noperable program or batch file.  (พิมพ์ help เพื่อดูคำสั่ง)`);
+  }
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){if(busy)return;run(inp.value);inp.value='';}
+    else if(e.key==='ArrowUp'){if(hp>0){hp--;inp.value=hist[hp];}e.preventDefault();}
+    else if(e.key==='ArrowDown'){if(hp<hist.length-1){hp++;inp.value=hist[hp];}else{hp=hist.length;inp.value='';}e.preventDefault();}
+  });
+  const quick=quickList||['help','ipconfig','cls'];
+  const term=el('div',{class:'term'},
+    el('div',{class:'tbar'},el('span',{},'Command Prompt — LAB-PC07'),el('span',{},'จำลอง')),
+    screen,
+    el('div',{class:'inrow'},el('span',{class:'prompt'},'C:\\>'),inp),
+    el('div',{class:'quick'},quick.map(q=>el('button',{onclick:()=>{if(!busy){run(q);}}},q)))
+  );
+  screen.addEventListener('click',()=>inp.focus());
+  put('Microsoft Windows [Version 10.0.19045] (จำลองเพื่อการเรียนรู้)\n\nพิมพ์ help เพื่อดูคำสั่งที่ใช้ได้\n');
+  return term;
+}
+
+
+/* ---------- Linux VM (v86, runs in the student's browser) ---------- */
+let VM=null;
+function stopVM(){ if(VM){ const v=VM; VM=null; try{ v.destroy(); }catch(e){} } }
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    if(window.V86){res();return;}
+    const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('script')); document.head.append(s);
+  });
+}
+function vmPanel(r){
+  const status=el('div',{class:'vmstatus'},'VM ยังไม่ได้เปิด กด "เปิด Linux VM" เพื่อบูตเครื่อง ครั้งแรกต้องดาวน์โหลดไฟล์ประมาณ 10 MB และบูตประมาณ 10–30 วินาที');
+  const screen=el('div',{class:'vmscreen',title:'คลิกที่นี่แล้วพิมพ์คำสั่ง'},
+    el('div',{style:'white-space:pre;font:14px/16px "JetBrains Mono",Consolas,monospace'}),
+    el('canvas',{style:'display:none'}));
+  const setStatus=(t,bad)=>{status.textContent=t;status.className='vmstatus'+(bad?' bad':'');};
+  const setupBtn=el('button',{class:'btn ghost',onclick:()=>{
+    if(!VM)return; VM.keyboard_send_text(r.vmSetup+'\n');
+    setStatus('ส่งคำสั่งเตรียมโจทย์แล้ว ถ้าหน้าจอยังค้างอยู่ที่บรรทัดคำสั่ง ให้คลิกหน้าจอแล้วกด Enter');
+  }},'เตรียมโจทย์');
+  const restartBtn=el('button',{class:'btn ghost',onclick:()=>{ if(VM){ VM.restart(); setStatus('กำลังรีสตาร์ท หลังบูตเสร็จต้องกด "เตรียมโจทย์" ใหม่'); } }},'รีสตาร์ท');
+  const stopBtn=el('button',{class:'btn ghost',onclick:()=>{ stopVM(); lock(true); startBtn.disabled=false; setStatus('ปิด VM แล้ว'); }},'ปิด VM');
+  const lock=on=>[setupBtn,restartBtn,stopBtn].forEach(b=>b.disabled=on);
+  lock(true);
+  const startBtn=el('button',{class:'btn',onclick:async()=>{
+    startBtn.disabled=true; setStatus('กำลังโหลดไฟล์ VM...');
+    try{
+      const head=await fetch(VM_BASE+'buildroot-bzimage.bin',{method:'HEAD'});
+      if(!head.ok) throw new Error('noimage');
+      await loadScript(VM_BASE+'libv86.js');
+      stopVM();
+      VM=new V86({
+        wasm_path:VM_BASE+'v86.wasm',
+        memory_size:128*1024*1024,
+        vga_memory_size:8*1024*1024,
+        screen_container:screen,
+        bios:{url:VM_BASE+'seabios.bin'},
+        vga_bios:{url:VM_BASE+'vgabios.bin'},
+        bzimage:{url:VM_BASE+'buildroot-bzimage.bin'},
+        cmdline:'tsc=reliable mitigations=off random.trust_cpu=on',
+        autostart:true
+      });
+      VM.add_listener('emulator-ready',()=>{
+        lock(false);
+        setStatus('กำลังบูต รอจนเห็น prompt ของ Linux (ถ้าถามชื่อผู้ใช้ให้พิมพ์ root) แล้วกด "เตรียมโจทย์" คลิกที่หน้าจอดำก่อนพิมพ์คำสั่ง');
+      });
+    }catch(e){
+      startBtn.disabled=false;
+      let missing='';
+      try{ const st=await (await fetch('vm-status')).json(); missing=st.files.filter(f=>!f.ok||!f.size).map(f=>f.name).join(', '); }catch(_){}
+      setStatus('เปิด VM ไม่ได้ เพราะไม่พบไฟล์ VM บนเซิร์ฟเวอร์'+(missing?' (ไฟล์ที่ขาด: '+missing+')':'')+' ครูตรวจได้ที่หน้า /vm-status และดูวิธีแก้ใน README',true);
+    }
+  }},'เปิด Linux VM');
+  return el('div',{class:'vm'},el('div',{class:'row',style:'margin-bottom:10px'},startBtn,setupBtn,restartBtn,stopBtn),status,screen);
+}
+
+/* ---------- summary ---------- */
+function code(){
+  const s=(S.name.trim()||'-')+'|'+score()+'|'+Object.keys(S.done).sort().join(',');
+  let h=2166136261; for(const ch of s){h^=ch.codePointAt(0);h=Math.imul(h,16777619)>>>0;}
+  return h.toString(36).toUpperCase().padStart(7,'0').slice(-7);
+}
+function summary(){
+  stopVM(); stopTick();
+  app.innerHTML='';
+  const max=(totalTasks+totalVM)*10;
+  app.append(
+    el('button',{class:'back',onclick:home},'‹ กลับหน้ารวมห้อง'),
+    el('div',{class:'cert'},
+      el('h1',{},'ใบสรุปผล NetLab'),
+      el('p',{style:'margin:0;color:var(--muted)'},'ชื่อ: ',el('b',{style:'color:var(--ink)'},S.name.trim()||'(ยังไม่ได้กรอกชื่อ กลับไปกรอกที่หน้ารวมห้อง)')),
+      el('table',{},ROOMS.map((r,ri)=>el('tr',{},el('td',{},`ห้อง ${ri+1} ${r.title}`),el('td',{},(roomDone(r)===r.tasks.length?'ผ่าน':`${roomDone(r)}/${r.tasks.length}`)+(r.vmTasks?`  VM ${vmDone(r)}/${r.vmTasks.length}`:'')+(S.timers[r.id]&&S.timers[r.id].end?`  (${fmt(S.timers[r.id].end-S.timers[r.id].start)})`:''))))),
+      el('p',{style:'font-size:20px;margin:6px 0'},`คะแนนรวม ${score()} / ${max}`),
+      el('p',{style:'margin:14px 0 2px;color:var(--muted);font-size:15px'},'รหัสยืนยันสำหรับส่งครู'),
+      el('div',{class:'code'},code()),
+      el('p',{style:'color:var(--muted);font-size:14px;margin-top:14px'},'ถ่ายภาพหน้าจอนี้ส่งครู รหัสยืนยันจะเปลี่ยนเมื่อชื่อหรือคะแนนเปลี่ยน')
+    )
+  );
+  window.scrollTo(0,0);
+}
+
+home();
+</script>
+</body>
+</html>
