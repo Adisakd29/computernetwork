@@ -1,0 +1,28 @@
+{
+  "name": "netlab",
+  "version": "2.5.0",
+  "description": "NetLab virtual lab for computer networking class (vocational level)",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/fetch-assets.js",
+    "prestart": "node scripts/fetch-assets.js",
+    "start": "node server.js",
+    "test": "node tests/audit.js",
+    "test:api": "node tests/api.test.js",
+    "test:e2e": "sh tests/e2e/run.sh",
+    "check:lessons": "node tests/lessons-check.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "pg": "^8.23.1",
+    "v86": "0.5.462"
+  },
+  "devDependencies": {
+    "axe-core": "^4.10.2",
+    "jsdom": "^26.1.0"
+  }
+}
