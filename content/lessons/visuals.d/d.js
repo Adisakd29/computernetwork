@@ -1,0 +1,42 @@
+'use strict';
+/* NetLab figures batch j (public/js/figs-j.js): figures for long sections that had none (weeks 2, 6, 7, 8, 9, 11, 14, 15, 16, 17).
+   Same format as content/lessons/visuals.js. Every anchor matches exactly one block of its type in its section.
+   w9 s3 has two entries on different anchors, so their order here does not matter. */
+module.exports = [
+  { lesson: 'w2', section: 's2', anchor: { type: 'p', match: 'เราเตอร์ (Router) ตัดสินใจจาก IP Address ปลายทาง' }, mode: 'after',
+    block: { type: 'diagram', name: 'bridge-router-gw',
+      caption: 'ดูว่าแต่ละอุปกรณ์ใช้ข้อมูลอะไรตัดสินใจ: Bridge ดูตาราง MAC จึงกรองเฟรม PC1 ถึง PC2 ไว้แต่ส่ง PC1 ถึง PC3 ข้ามไป โดยทุกเครื่องยังอยู่ในวง 192.168.1.0/24 เดียวกัน Router มีพอร์ตละวง IP และเลือกทางจาก Routing Table ส่วน Modem/ONT แค่แปลงสัญญาณไฟฟ้ากับแสง และ Gateway แปลงโปรโตคอล ซึ่งต่างจาก Default Gateway ในการตั้งค่า IP' } },
+  { lesson: 'w16', section: 's2', anchor: { type: 'p', match: 'สำหรับความถูกต้อง เราใช้ค่าแฮช (Hash)' }, mode: 'after',
+    block: { type: 'diagram', name: 'sw-data-protect',
+      caption: 'อ่านเส้นเวลา WannaCry เพื่อเห็นว่าแพตช์ออกก่อนการระบาดราว 2 เดือน ดูว่า Defender แต่ละแบบสแกนตรวจอะไร แล้วเทียบ C กับ I: BitLocker ทำให้ดิสก์ที่ถูกถอดไปอ่านไม่ออก ส่วนค่า SHA-256 จาก Get-FileHash ต้องตรงกับที่ผู้ผลิตประกาศทุกตัวอักษรจึงเชื่อได้ว่าไฟล์ไม่ถูกแก้' } },
+  { lesson: 'w8', section: 's2', anchor: { type: 'p', match: 'การเปลี่ยนชื่อ Workgroup หรือเข้าร่วม Domain ทำที่ System Properties' }, mode: 'after',
+    block: { type: 'diagram', name: 'workgroup-domain',
+      caption: 'สังเกตว่าใน Workgroup บัญชี owner ต้องสร้างซ้ำบนเครื่องที่จะเข้าใช้ ขณะที่ใน Domain บัญชีอยู่ที่ DC ที่เดียวและล็อกอินได้ทุกเครื่อง ส่วนล่างคือหน้าต่าง Computer Name/Domain Changes ที่เปิดจาก sysdm.cpl หมายเลข 1 ถึง 3 คือช่องชื่อเครื่อง การเลือก Workgroup หรือ Domain และการรีสตาร์ท' } },
+  { lesson: 'w6', section: 's1', anchor: { type: 'p', match: 'อย่างไรก็ตาม WLAN มีข้อจำกัดที่ต้องเข้าใจ' }, mode: 'after',
+    block: { type: 'diagram', name: 'wlan-shared-air',
+      caption: 'ดูในผังร้านกาแฟว่าเครื่องใดใช้สาย เครื่องใดใช้ Wi-Fi และคลื่นที่ออกนอกร้าน แล้วดูแถบแบ่งเวลาส่งว่าทำไมผู้ใช้มากขึ้นความเร็วต่อคนจึงลดลง (ตัวเลขสมมุติ) และตัวอย่าง AX3000 ที่อธิบายว่าทำไมความเร็วจริงต่ำกว่าตัวเลขบนกล่อง' } },
+  { lesson: 'w7', section: 's3', anchor: { type: 'p', match: 'MAC Filtering มีจุดอ่อนสองข้อ' }, mode: 'after',
+    block: { type: 'diagram', name: 'ssid-mac-exposed',
+      caption: 'ไล่ลูกศรจากบนลงล่างเพื่อดูว่าชื่อ SHOP-STAFF หลุดในเฟรม Probe และ Association แม้ Beacon จะซ่อนชื่อแล้ว ดูแถบเฟรมว่า MAC อยู่ในส่วนหัวที่ไม่เข้ารหัสจึงถูกดักและปลอมได้ ส่วนตารางล่างสรุปว่าสิ่งที่กันผู้บุกรุกได้จริงคือ WPA2/WPA3 กับรหัสผ่านที่ยาว' } },
+  { lesson: 'w9', section: 's3', anchor: { type: 'p', match: 'ผู้ดูแลระบบนิยมใช้คำสั่งแทนการคลิก' }, mode: 'after',
+    block: { type: 'diagram', name: 'unc-anatomy',
+      caption: 'สีของแต่ละส่วนใน UNC path ตรงกับคำอธิบายด้านล่าง ให้เทียบว่าชื่อเครื่องกับชื่อแชร์ไปอยู่ในช่อง Folder ของหน้าต่าง Map Network Drive และในคำสั่ง net use อย่างไร และผลที่เห็นใน This PC แสดงชื่ออะไร' } },
+  { lesson: 'w14', section: 's5', anchor: { type: 'list', match: 'ปิดการเข้าถึงแบบไม่ต้องมีคนกดยอมรับ (Unattended Access)' }, mode: 'after',
+    block: { type: 'diagram', name: 'remote-access-paths',
+      caption: 'เทียบทางเข้าที่อันตรายกับทางที่ปลอดภัยกว่า: เปิดพอร์ต 3389 สู่อินเทอร์เน็ตทำให้ใครก็ลองเข้าได้ ส่วนการเข้า VPN พร้อม MFA ก่อนแล้วจึงใช้ RDP ที่เปิด NLA หรือ SSH ด้วยกุญแจจำกัดคนเข้าถึง โปรแกรมอย่าง AnyDesk เชื่อมต่อออกผ่านเซิร์ฟเวอร์กลางจึงไม่ต้องเปิดพอร์ต แต่ต้องระวังการถูกหลอกให้กดยอมรับ' } },
+  { lesson: 'w11', section: 's2', anchor: { type: 'table', match: 'ผู้พัฒนา/ที่มา' }, mode: 'after',
+    block: { type: 'diagram', name: 'nos-lineage',
+      caption: 'ไล่ลูกศรในแต่ละกรอบเพื่อดูว่า NOS แต่ละตัวมาจากไหน เช่น Solaris สืบจาก UNIX ผ่าน SunOS ส่วน Linux เขียนขึ้นใหม่แต่ทำงานคล้าย UNIX แล้วดูกรอบล่างว่าในโรงพยาบาลตัวอย่าง งานแต่ละแบบเลือกใช้ NOS ใด' } },
+  { lesson: 'w11', section: 's5', anchor: { type: 'table', match: 'Oracle VirtualBox' }, mode: 'after',
+    block: { type: 'diagram', name: 'vbox-vmware-map',
+      caption: 'ดูตารางบนเพื่อเลือกโปรแกรมให้ตรงกับระบบปฏิบัติการของเครื่องจริง แล้วดูว่าเครื่องจำลองหนึ่งเครื่องประกอบด้วยไฟล์อะไร (ไฟล์ค่าตั้งเครื่องกับดิสก์เสมือน) และ Guest Additions หรือ VMware Tools ต้องติดตั้งใน Guest ไม่ใช่ใน Host' } },
+  { lesson: 'w15', section: 's4', anchor: { type: 'list', match: 'สร้างความเร่งรีบหรือความกลัว' }, mode: 'after',
+    block: { type: 'widget', name: 'phish-spotter',
+      caption: 'หาจุดพิรุธ 6 จุดในอีเมลสมมุติ โดยเฉพาะโดเมนของผู้ส่ง และปลายทางจริงของลิงก์ที่แสดงเมื่อโฟกัสหรือวางเมาส์ ส่วนที่ดูน่าเชื่ออย่างโลโก้ไม่ใช่หลักฐานว่าอีเมลเป็นของจริง' } },
+  { lesson: 'w9', section: 's3', anchor: { type: 'example', match: 'ครูสร้างโฟลเดอร์ส่งงานบนเครื่อง LAB-PC07' }, mode: 'after',
+    block: { type: 'widget', name: 'unc-check',
+      caption: 'ลองตัวอย่างที่ผิด เช่น ใช้ / แทน \\, ขึ้นต้นด้วย \\ ตัวเดียว หรือ IP ที่เกิน 255 เพื่อดูว่าผิดตรงไหน แล้วลองแบบถูกเพื่อดูคำสั่ง net use และชื่อไดรฟ์ที่จะเห็นใน This PC' } },
+  { lesson: 'w17', section: 's6', anchor: { type: 'p', match: 'การพิมพ์รหัสผ่านต่อท้ายคำสั่งตรง ๆ' }, mode: 'after',
+    block: { type: 'widget', name: 'net-user-term',
+      caption: 'ทำตามปุ่มตัวอย่างตามลำดับ: สร้างบัญชี std01 สร้างกลุ่ม Students แล้วเพิ่มสมาชิก สังเกตว่าแบบผู้ใช้ทั่วไปจะได้ Access is denied เมื่อสั่งสร้างหรือแก้ไข และอ่านบรรทัดที่ไฮไลต์ในผลของ net user std01 ซึ่งบอกสถานะบัญชี วันหมดอายุรหัสผ่าน และกลุ่มที่สังกัด' } }
+];
