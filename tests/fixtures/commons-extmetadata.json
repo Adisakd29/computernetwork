@@ -1,0 +1,31 @@
+{
+  "batchcomplete": "",
+  "query": {
+    "normalized": [
+      { "from": "File:Crimping-pliers-pro-RJ-0a.jpg", "to": "File:Crimping-pliers-pro-RJ-0a.jpg" },
+      { "from": "File:Ethernet RJ45 connector p1160054.jpg", "to": "File:Ethernet RJ45 connector p1160054.jpg" },
+      { "from": "File:no_such_netlab_file.jpg", "to": "File:No such netlab file.jpg" }
+    ],
+    "pages": {
+      "-1": { "ns": 6, "title": "File:No such netlab file.jpg", "missing": "", "known": "" },
+      "101": {
+        "pageid": 101, "ns": 6, "title": "File:Crimping-pliers-pro-RJ-0a.jpg", "imagerepository": "local",
+        "imageinfo": [ { "extmetadata": {
+          "Artist": { "value": "<a href=\"//commons.wikimedia.org/wiki/User:Example\" title=\"User:Example\">Example&nbsp;User</a> &amp; <span class=\"x\">Friend</span>", "source": "commons-desc-page" },
+          "LicenseShortName": { "value": "CC BY-SA 3.0", "source": "commons-desc-page" },
+          "LicenseUrl": { "value": "https://creativecommons.org/licenses/by-sa/3.0", "source": "commons-desc-page" },
+          "AttributionRequired": { "value": "true", "source": "commons-desc-page" }
+        } } ]
+      },
+      "102": {
+        "pageid": 102, "ns": 6, "title": "File:Ethernet RJ45 connector p1160054.jpg", "imagerepository": "local",
+        "imageinfo": [ { "extmetadata": {
+          "Artist": { "value": "", "source": "commons-desc-page" },
+          "Credit": { "value": "<span class=\"int-own-work\">Own work</span>", "source": "commons-desc-page" },
+          "LicenseShortName": { "value": "Public domain", "source": "commons-desc-page" },
+          "AttributionRequired": { "value": "false", "source": "commons-desc-page" }
+        } } ]
+      }
+    }
+  }
+}
